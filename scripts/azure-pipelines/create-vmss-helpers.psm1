@@ -20,7 +20,7 @@ function Find-ResourceGroupNameCollision {
   Param([string]$Test, $Resources)
 
   foreach ($resource in $Resources) {
-    if ($resource.ResourceGroupName -eq $Test) {
+    if ($resource.name -eq $Test) {
       return $true
     }
   }
@@ -33,7 +33,7 @@ function Find-ResourceGroupNameCollision {
 Attempts to find a name that does not collide with any resources in the resource group.
 
 .DESCRIPTION
-Find-ResourceGroupName takes a set of resources from Get-AzResourceGroup, and finds the
+Find-ResourceGroupName takes a set of resources from az group list, and finds the
 first name in {$Prefix, $Prefix-1, $Prefix-2, ...} such that the name doesn't collide with
 any of the resources in the resource group.
 
@@ -44,7 +44,7 @@ function Find-ResourceGroupName {
   [CmdletBinding()]
   Param([string] $Prefix)
 
-  $resources = Get-AzResourceGroup
+  $resources = & az group list | ConvertFrom-Json
   $result = $Prefix
   $suffix = 0
   while (Find-ResourceGroupNameCollision -Test $result -Resources $resources) {

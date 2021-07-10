@@ -54,7 +54,7 @@ Write-Progress `
 
 $ResourceGroupName = Find-ResourceGroupName $Prefix
 $AdminPW = New-Password
-New-AzResourceGroup -Name $ResourceGroupName -Location $Location
+& az group create --location $location --resource-group $ResourceGroupName
 $AdminPWSecure = ConvertTo-SecureString $AdminPW -AsPlainText -Force
 $Credential = New-Object System.Management.Automation.PSCredential ("AdminUser", $AdminPWSecure)
 
@@ -64,89 +64,93 @@ Write-Progress `
   -Status 'Creating virtual network' `
   -PercentComplete (100 / $TotalProgress * $CurrentProgress++)
 
-$allFirewallRules = @()
-
-$allFirewallRules += New-AzNetworkSecurityRuleConfig `
-  -Name AllowHTTP `
-  -Description 'Allow HTTP(S)' `
-  -Access Allow `
-  -Protocol Tcp `
-  -Direction Outbound `
-  -Priority 1008 `
-  -SourceAddressPrefix * `
-  -SourcePortRange * `
-  -DestinationAddressPrefix * `
-  -DestinationPortRange @(80, 443)
-
-$allFirewallRules += New-AzNetworkSecurityRuleConfig `
-  -Name AllowSFTP `
-  -Description 'Allow (S)FTP' `
-  -Access Allow `
-  -Protocol Tcp `
-  -Direction Outbound `
-  -Priority 1009 `
-  -SourceAddressPrefix * `
-  -SourcePortRange * `
-  -DestinationAddressPrefix * `
-  -DestinationPortRange @(21, 22)
-
-$allFirewallRules += New-AzNetworkSecurityRuleConfig `
-  -Name AllowDNS `
-  -Description 'Allow DNS' `
-  -Access Allow `
-  -Protocol * `
-  -Direction Outbound `
-  -Priority 1010 `
-  -SourceAddressPrefix * `
-  -SourcePortRange * `
-  -DestinationAddressPrefix * `
-  -DestinationPortRange 53
-
-$allFirewallRules += New-AzNetworkSecurityRuleConfig `
-  -Name AllowGit `
-  -Description 'Allow git' `
-  -Access Allow `
-  -Protocol Tcp `
-  -Direction Outbound `
-  -Priority 1011 `
-  -SourceAddressPrefix * `
-  -SourcePortRange * `
-  -DestinationAddressPrefix * `
-  -DestinationPortRange 9418
-
-$allFirewallRules += New-AzNetworkSecurityRuleConfig `
-  -Name DenyElse `
-  -Description 'Deny everything else' `
-  -Access Deny `
-  -Protocol * `
-  -Direction Outbound `
-  -Priority 1013 `
-  -SourceAddressPrefix * `
-  -SourcePortRange * `
-  -DestinationAddressPrefix * `
-  -DestinationPortRange *
-
 $NetworkSecurityGroupName = $ResourceGroupName + 'NetworkSecurity'
-$NetworkSecurityGroup = New-AzNetworkSecurityGroup `
-  -Name $NetworkSecurityGroupName `
-  -ResourceGroupName $ResourceGroupName `
-  -Location $Location `
-  -SecurityRules $allFirewallRules
+& az network nsg create --resource-group $ResourceGroupName --name $NetworkSecurityGroupName
+& az network nsg rule create `
+  --resource-group $ResourceGroupName `
+  --nsg-name $NetworkSecurityGroupName `
+  --name AllowHTTP `
+  --description 'Allow HTTP(S)' `
+  --access Allow `
+  --protocol Tcp `
+  --direction Outbound `
+  --priority 1008 `
+  --source-address-prefixes * `
+  --source-port-ranges * `
+  --destination-address-prefixes * `
+  --destination-port-ranges 80 443
 
-$SubnetName = $ResourceGroupName + 'Subnet'
-$Subnet = New-AzVirtualNetworkSubnetConfig `
-  -Name $SubnetName `
-  -AddressPrefix "10.0.0.0/16" `
-  -NetworkSecurityGroup $NetworkSecurityGroup `
-  -ServiceEndpoint "Microsoft.Storage"
+& az network nsg rule create `
+  --resource-group $ResourceGroupName `
+  --nsg-name $NetworkSecurityGroupName `
+  --name AllowSFTP `
+  --description 'Allow (S)FTP' `
+  --access Allow `
+  --protocol Tcp `
+  --direction Outbound `
+  --priority 1009 `
+  --source-address-prefixes * `
+  --source-port-ranges * `
+  --destination-address-prefixes * `
+  --destination-port-ranges 21 22
+
+& az network nsg rule create `
+  --resource-group $ResourceGroupName `
+  --nsg-name $NetworkSecurityGroupName `
+  --name AllowDNS `
+  --description 'Allow DNS' `
+  --access Allow `
+  --protocol * `
+  --direction Outbound `
+  --priority 1010 `
+  --source-address-prefixes * `
+  --source-port-ranges * `
+  --destination-address-prefixes * `
+  --destination-port-ranges 53
+
+& az network nsg rule create `
+  --resource-group $ResourceGroupName `
+  --nsg-name $NetworkSecurityGroupName `
+  --name AllowGit `
+  --description 'Allow git' `
+  --access Allow `
+  --protocol Tcp `
+  --direction Outbound `
+  --priority 1011 `
+  --source-address-prefixes * `
+  --source-port-ranges * `
+  --destination-address-prefixes * `
+  --destination-port-ranges 9418
+
+& az network nsg rule create `
+  --resource-group $ResourceGroupName `
+  --nsg-name $NetworkSecurityGroupName `
+  --name DenyElse `
+  --description 'Deny everything else' `
+  --access Deny `
+  --protocol * `
+  --direction Outbound `
+  --priority 1013 `
+  --source-address-prefixes * `
+  --source-port-ranges * `
+  --destination-address-prefixes * `
+  --destination-port-ranges *
 
 $VirtualNetworkName = $ResourceGroupName + 'Network'
-$VirtualNetwork = New-AzVirtualNetwork `
-  -Name $VirtualNetworkName `
-  -ResourceGroupName $ResourceGroupName `
-  -Location $Location `
-  -AddressPrefix "10.0.0.0/16" `
-  -Subnet $Subnet
+& az network vnet create `
+  --resource-group $ResourceGroupName `
+  --name $VirtualNetworkName `
+  --address-prefixes '10.0.0.0/16' `
+  --location $Location
+
+$SubnetName = $ResourceGroupName + 'Subnet'
+& az network vnet subnet create `
+  --resource-group $ResourceGroupName `
+  --vnet-name $VirtualNetworkName `
+  --name $SubnetName `
+  --address-prefixes '10.0.0.0/16' `
+  --network-security-group $NetworkSecurityGroupName `
+  --service-endpoints Microsoft.Storage
 
 ####################################################################################################
 Write-Progress `
