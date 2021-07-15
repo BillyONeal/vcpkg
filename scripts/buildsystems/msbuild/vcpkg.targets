@@ -117,29 +117,13 @@
   <Target Name="AppLocalFromInstalled" AfterTargets="CopyFilesToOutputDirectory" BeforeTargets="CopyLocalFilesOutputGroup;RegisterOutput"
           Condition="'$(VcpkgEnabled)' == 'true' and '$(VcpkgApplocalDeps)' == 'true' and '$(LinkSkippedExecution)' != 'true'">
     <Message Text="[vcpkg] Starting VcpkgApplocalDeps" Importance="low" />
-    <PropertyGroup>
-      <_VcpkgAppLocalPowerShellCommonArguments>-ExecutionPolicy Bypass -noprofile -File "$(MSBuildThisFileDirectory)applocal.ps1" "$(TargetPath)" "$(_ZVcpkgCurrentInstalledDir)$(VcpkgConfigSubdir)bin" "$(TLogLocation)$(ProjectName).write.1u.tlog" "$(IntDir)vcpkg.applocal.log"</_VcpkgAppLocalPowerShellCommonArguments>
-    </PropertyGroup>
     <!-- Search %PATH% for pwsh.exe if it is available. -->
     <Exec
-      Command="pwsh.exe $(_VcpkgAppLocalPowerShellCommonArguments)"
+      Command="C:\Dev\vcpkg-tool\out\build\x64-Debug\vcpkg.exe z-applocal --target-binary=&quot;$(TargetPath)&quot; --installed-bin-dir=&quot;$(_ZVcpkgCurrentInstalledDir)$(VcpkgConfigSubdir)bin&quot; --tlog-file=&quot;$(TLogLocation)$(ProjectName).write.1u.tlog&quot; --copied-files-log=&quot;$(IntDir)vcpkg.applocal.log&quot;"
       StandardOutputImportance="Normal"
       StandardErrorImportance="Normal"
       IgnoreExitCode="true"
       UseCommandProcessor="false">
-      <Output TaskParameter="ExitCode"
-              PropertyName="_VcpkgAppLocalExitCode" />
-    </Exec>
-    <!-- Fall back to well known system PowerShell location otherwise. -->
-    <Message Text="[vcpkg] Failed to run applocal.ps1 using pwsh, falling back to system PowerShell." Importance="low"
-             Condition="$(_VcpkgAppLocalExitCode) == 9009" />
-    <Exec
-      Command="%22$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe%22 $(_VcpkgAppLocalPowerShellCommonArguments)"
-      StandardOutputImportance="Normal"
-      StandardErrorImportance="Normal"
-      IgnoreExitCode="true"
-      UseCommandProcessor="false"
-      Condition="$(_VcpkgAppLocalExitCode) == 9009">
       <Output TaskParameter="ExitCode"
               PropertyName="_VcpkgAppLocalExitCode" />
     </Exec>
