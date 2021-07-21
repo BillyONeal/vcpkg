@@ -128,18 +128,19 @@ vcpkgDownloadFile()
 vcpkgExtractArchive()
 {
     archive=$1; toPath=$2
-    rm -rf "$toPath" "$toPath.partial"
-    mkdir -p "$toPath.partial"
+    partialPath="$toPath.partial"
+    rm -rf "$toPath" "$partialPath"
+    mkdir -p "$partialPath"
 
     archiveType="${archive##*.}"
     if [ "$archiveType" = "zip" ]; then
         vcpkgCheckRepoTool "unzip"
-        $(cd "$toPath.partial" && unzip -qqo "$archive")
+        $(cd "$partialPath" && unzip -qqo "$archive")
     else
         vcpkgCheckRepoTool "tar"
-        $(cd "$toPath.partial" && tar xzf "$archive")
+        $(cd "$partialPath" && tar xzf "$archive")
     fi
-    mv "$toPath.partial" "$toPath"
+    mv "$partialPath" "$toPath"
 }
 
 fetchTool()
