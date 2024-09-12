@@ -32,7 +32,7 @@
       ],
       "dependencies": [
         {
-          "$comment": "pkgcong is used by the breakpad backend.",
+          "$comment": "pkgconf is used by the breakpad backend.",
           "name": "pkgconf",
           "host": true,
           "platform": "!android & !ios"
@@ -70,7 +70,7 @@
     "wer": {
       "description": [
         "Enables the Windows Error Reporting backend.",
-        "Cf.https://github.com/getsentry/sentry-native#compile-time-options"
+        "Cf. https://github.com/getsentry/sentry-native#compile-time-options"
       ],
       "supports": "windows & !static",
       "dependencies": [
@@ -79,7 +79,8 @@
           "features": [
             "backend"
           ]
-        }
+        },
+        "crashpad"
       ]
     }
   }

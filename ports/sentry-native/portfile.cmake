@@ -9,10 +9,11 @@ vcpkg_extract_source_archive(
     ARCHIVE "${ARCHIVE}"
     NO_REMOVE_ONE_LEVEL
     PATCHES
-        fix-crashpad-wer.patch
-        fix-usage-runtime.patch
+        devendor-crashpad.patch
 )
-file(REMOVE_RECURSE "${SOURCE_PATH}/external/crashpad/third_party/zlib/zlib")
+
+file(REMOVE_RECURSE "${SOURCE_PATH}/external/crashpad/third_party/crashpad")
+file(REMOVE_RECURSE "${SOURCE_PATH}/external/crashpad/third_party/zlib")
 
 vcpkg_list(SET options)
 
@@ -60,10 +61,6 @@ vcpkg_copy_pdbs()
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 
 vcpkg_cmake_config_fixup(PACKAGE_NAME sentry CONFIG_PATH lib/cmake/sentry)
-
-if(EXISTS "${CURRENT_PACKAGES_DIR}/bin/crashpad_handler${VCPKG_TARGET_EXECUTABLE_SUFFIX}")
-    vcpkg_copy_tools(TOOL_NAMES crashpad_handler AUTO_CLEAN)
-endif()
 
 vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
 file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
