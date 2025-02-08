@@ -7,6 +7,9 @@ vcpkg_from_github(
         prepare-for-getting-zlib-and-expat-from-vcpkg.patch
 )
 
+file(REMOVE_RECURSE "${SOURCE_PATH}/third-party")
+file(MAKE_DIRECTORY "${SOURCE_PATH}/third-party/expat/lib" "${SOURCE_PATH}/third-party/zlib")
+
 set(pdf_handler_mini_pdfl_dir "windows")
 set(pdf_handler_resource_dir "win")
 
@@ -22,7 +25,7 @@ file(COPY "${SOURCE_PATH}/public" DESTINATION "${plugin_sdk_directory}")
 
 if("${VCPKG_TARGET_ARCHITECTURE}" STREQUAL "x64")
     set(arch_64_bit "ON")
-    set(lib_path "${SOURCE_PATH}/public/libraries/windows_x64")    
+    set(lib_path "${SOURCE_PATH}/public/libraries/windows_x64")
 else()
     set(arch_64_bit "OFF")
     set(lib_path "${SOURCE_PATH}/public/libraries/windows")
@@ -44,15 +47,14 @@ else()
 endif()
 
 # Redirect build to use expat library from vcpkg
-configure_file(${CURRENT_PORT_DIR}/expat.h ${SOURCE_PATH}/third-party/expat/lib/expat.h @ONLY)
+configure_file("${CURRENT_PORT_DIR}/expat.h" "${SOURCE_PATH}/third-party/expat/lib/expat.h" @ONLY)
 string(APPEND VCPKG_LINKER_FLAGS_DEBUG " ${CURRENT_INSTALLED_DIR}/${TRIPLET}/debug/lib/${expat_debug_lib} ")
 string(APPEND VCPKG_LINKER_FLAGS_RELEASE " ${CURRENT_INSTALLED_DIR}/${TRIPLET}/lib/${expat_release_lib} ")
 
 # Redirect build to use zlib library from vcpkg
-configure_file(${CURRENT_PORT_DIR}/zlib.h ${SOURCE_PATH}/third-party/zlib/zlib.h @ONLY)
+configure_file("${CURRENT_PORT_DIR}/zlib.h" "${SOURCE_PATH}/third-party/zlib/zlib.h" @ONLY)
 string(APPEND VCPKG_LINKER_FLAGS_DEBUG " ${CURRENT_INSTALLED_DIR}/${TRIPLET}/debug/lib/zlibd.lib ")
 string(APPEND VCPKG_LINKER_FLAGS_RELEASE " ${CURRENT_INSTALLED_DIR}/${TRIPLET}/lib/zlib.lib ")
-
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}/build"
@@ -60,12 +62,11 @@ vcpkg_cmake_configure(
     OPTIONS
         -DXMP_CMAKEFOLDER_NAME="msbuild"
         -DCMAKE_CL_64=${arch_64_bit}
-        -DXMP_BUILD_WARNING_AS_ERROR=On 
+        -DXMP_BUILD_WARNING_AS_ERROR=OFF
         -DXMP_BUILD_STATIC=${build_static}
 )
 
 vcpkg_cmake_build()
-
 
 file(RENAME "${SOURCE_PATH}/LICENSE" "${SOURCE_PATH}/copyright")
 file(COPY "${SOURCE_PATH}/copyright" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
