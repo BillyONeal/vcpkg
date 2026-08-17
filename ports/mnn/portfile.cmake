@@ -11,6 +11,7 @@ vcpkg_from_github(
     PATCHES
         use-package-and-install.patch
         fix-linux.patch
+        fix-bufferallocator-cstdint.patch # https://github.com/alibaba/MNN/pull/4918
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS

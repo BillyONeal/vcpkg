@@ -1,11 +1,18 @@
+vcpkg_download_distfile(MODES_ENUMS_PATCH
+    URLS "https://github.com/JonathanSalwan/Triton/commit/5e4299473c78fa1bb9b5da1679337fc853863890.diff?full_index=1"
+    FILENAME "triton-5e4299473c78fa1bb9b5da1679337fc853863890.diff"
+    SHA512 aa7d9283e37360d2ff95080838e3ba34822f6bfa7240e06e5932d4d7fc6e846cd845d08d34561a9f0b4f3db2ea889f27121e14a6fb772d2a8cb9f21ba4b77673
+)
+
 vcpkg_from_github(
-  OUT_SOURCE_PATH SOURCE_PATH
-  REPO JonathanSalwan/Triton
-  REF e312eafcdf507d9aebd0f8a7daf2eb4c28a19d30
-  SHA512 eb184859fe3023f188f7828335924da36c45dea90dc1ece7d8cf770dc7951022d4e51647cdd520e9bc91a8e01cab4a8801808e469900bdbbc3806624c132ad8d
-  HEAD_REF master
-  PATCHES
-    fix_bin_path.patch
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO JonathanSalwan/Triton
+    REF e312eafcdf507d9aebd0f8a7daf2eb4c28a19d30
+    SHA512 eb184859fe3023f188f7828335924da36c45dea90dc1ece7d8cf770dc7951022d4e51647cdd520e9bc91a8e01cab4a8801808e469900bdbbc3806624c132ad8d
+    HEAD_REF master
+    PATCHES
+        "${MODES_ENUMS_PATCH}"
+        fix_bin_path.patch
 )
 
 string(COMPARE NOTEQUAL "${VCPKG_LIBRARY_LINKAGE}" "static" DYNAMICLIB)

@@ -1,12 +1,25 @@
+vcpkg_download_distfile(RECORDER_PATCH
+    URLS "https://github.com/ZLMediaKit/ZLMediaKit/commit/ba877759da799bcc084e31562bb9c5d00295fd12.diff?full_index=1"
+    FILENAME "zlmediakit-cstdint-ba877759da799bcc084e31562bb9c5d00295fd12.patch"
+    SHA512 97a4ec57d8f8a5739778a557a5ee516dd4c71787871a9ed312d9a51dc466e746ba851800697dc7cc7912b5e12a604c1f64eedefaa7723626d366cf4d126f6372
+)
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO ZLMediaKit/ZLMediaKit
     REF 6b2fcf79435656be7797d396203adcc6c11ecc52
     SHA512 a2efe81f7fe6267418cc1e98f74283a10481b995815131324b7587c82f451d4bd35aa0190ef59efe46a057369208d4bf0658eaba44ae1a8532c6162cfb6e34f5
     HEAD_REF master
-    PATCHES 
+    PATCHES
         fix-dependency.patch
         fix-android.patch
+        "${RECORDER_PATCH}"
+)
+
+vcpkg_download_distfile(CHRONO_PATCH
+    URLS "https://github.com/ZLMediaKit/ZLToolKit/commit/e1e68cd261849934a5a0dccf9b2778147ac6465e.diff?full_index=1"
+    FILENAME "zlmediakit-zltoolkit-chrono-e1e68cd261849934a5a0dccf9b2778147ac6465e.patch"
+    SHA512 f6536f2a67624b3bd16802164d2aeafd115566bd775dcbbe635a1d2e1a3267d2b67a7b8d7c12f91d588c20bc8dac490b9f3ae4a998d2a6f05e5f59222f037a81
 )
 
 vcpkg_from_github(
@@ -16,7 +29,7 @@ vcpkg_from_github(
     SHA512 2a0b834f072fbc64edc84f408050e2c992f8d59f2480c67a372cace17d49f21eb2f40587288481acc42118e94a5b7863043982680c3f56bdde3863f97ca69356
     HEAD_REF master
     PATCHES
-        add-include-chrono.patch #https://github.com/ZLMediaKit/ZLToolKit/pull/258
+        "${CHRONO_PATCH}"
 )
 
 file(REMOVE_RECURSE "${SOURCE_PATH}/3rdpart/ZLToolKit")
@@ -84,7 +97,7 @@ vcpkg_cmake_install()
 vcpkg_copy_pdbs()
 
 vcpkg_copy_tools(TOOL_NAMES MediaServer AUTO_CLEAN)
-    
+
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
 
