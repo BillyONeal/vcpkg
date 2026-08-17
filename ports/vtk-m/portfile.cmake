@@ -1,4 +1,4 @@
-# VENDORED DEPENDENCIES! 
+# VENDORED DEPENDENCIES!
 # TODO: Should be replaced in the future with VCPKG internal versions
 # add_subdirectory(thirdparty/diy)
 # add_subdirectory(thirdparty/lodepng)
@@ -9,7 +9,7 @@
 # add_subdirectory(thirdparty/taotuple)
 # add_subdirectory(thirdparty/lcl)
 
-vcpkg_check_features (OUT_FEATURE_OPTIONS OPTIONS 
+vcpkg_check_features (OUT_FEATURE_OPTIONS OPTIONS
     FEATURES
       cuda   VTKm_ENABLE_CUDA
       omp    VTKm_ENABLE_OPENMP
@@ -18,7 +18,7 @@ vcpkg_check_features (OUT_FEATURE_OPTIONS OPTIONS
       double VTKm_USE_DOUBLE_PRECISION
       kokkos VTKm_ENABLE_KOKKOS # No port yet
     )
-    
+
 if("cuda" IN_LIST FEATURES)
     vcpkg_find_cuda(OUT_CUDA_TOOLKIT_ROOT cuda_toolkit_root)
     list(APPEND OPTIONS
@@ -31,21 +31,22 @@ if("cuda" IN_LIST FEATURES)
     set(VCPKG_LIBRARY_LINKAGE "static") # CUDA forces static build.
 endif()
 
-# For port customizations on unix systems. 
+# For port customizations on unix systems.
 # Please feel free to make these port features if it makes any sense
 #list(APPEND OPTIONS -DVTKm_ENABLE_GL_CONTEXT=ON) # or
 #list(APPEND OPTIONS -DVTKm_ENABLE_EGL_CONTEXT=ON) # or
 #list(APPEND OPTIONS -DVTKm_ENABLE_OSMESA_CONTEXT=ON)
 
-vcpkg_from_gitlab(GITLAB_URL "https://gitlab.kitware.com" 
-    OUT_SOURCE_PATH SOURCE_PATH 
-    REPO vtk/vtk-m 
+vcpkg_from_gitlab(GITLAB_URL "https://gitlab.kitware.com"
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO vtk/vtk-m
     REF v${VERSION}
     SHA512 eee8245f8ec4a960dfb55e4372fb4c63b6fcafcea33d23cec5f6ac411e531ac3bd2cd830bffeb9b2d44ad94e67bee560952734ab55390cb9a8b690037e380f91
     PATCHES
         fix-macos-15-6.patch
         pkgconfig.diff
         avoid-stdext.diff # to avoid removal of stdext::checked_array_iterator
+        fix-itlib-cstdint.patch # https://github.com/Viskores/viskores/commit/54e58e34c23466bcec72901dbf01add1f37b12ba
 )
 
 vcpkg_cmake_configure(

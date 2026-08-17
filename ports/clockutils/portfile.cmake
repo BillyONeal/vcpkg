@@ -6,9 +6,10 @@ vcpkg_from_github(
     HEAD_REF dev-1.2
     PATCHES
         fix-warningC4643.patch
-        add-missing-thread-header.patch
+        add-missing-thread-header.patch # https://github.com/ClockworkOrigins/clockUtils/pull/2
         cmake4.patch
         disable-werror.diff
+        fix-missing-cstdint.patch # https://github.com/ClockworkOrigins/clockUtils/pull/3
 )
 
 set(SHARED_FLAG OFF)

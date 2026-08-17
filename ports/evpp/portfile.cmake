@@ -15,7 +15,9 @@ vcpkg_from_github(
         fix-osx-build.patch
         Add-static-shared-handling.patch
         Export-unofficial-target.patch
+        fix-missing-cstdint.patch # https://github.com/Qihoo360/evpp/pull/323
 )
+
 file(REMOVE_RECURSE 
     "${SOURCE_PATH}/3rdparty/concurrentqueue"
     "${SOURCE_PATH}/3rdparty/gtest"

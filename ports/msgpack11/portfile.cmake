@@ -7,7 +7,7 @@ vcpkg_from_github(
     HEAD_REF master
     PATCHES
         msvc.patch
-        fix-additerator.patch
+        fix-missing-headers.diff # https://github.com/ar90n/msgpack11/commit/38a424bd46d866e31a739b3b2681dddacf738fe7 + https://github.com/ar90n/msgpack11/pull/21
         disable-werror.patch
 )
 

@@ -1,5 +1,11 @@
 vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 
+vcpkg_download_distfile(CONFIG_CSTDINT_PATCH
+    URLS "https://github.com/VowpalWabbit/vowpal_wabbit/commit/95c81cb143d8ba1fee38a45e682cb57fbfb0d380.diff?full_index=1"
+    FILENAME "vowpal-wabbit-cstdint-95c81cb143d8ba1fee38a45e682cb57fbfb0d380.diff"
+    SKIP_SHA512
+)
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO VowpalWabbit/vowpal_wabbit
@@ -8,6 +14,7 @@ vcpkg_from_github(
     HEAD_REF master
     PATCHES
         fix-android-build.patch
+        "${CONFIG_CSTDINT_PATCH}"
 )
 
 vcpkg_cmake_configure(
