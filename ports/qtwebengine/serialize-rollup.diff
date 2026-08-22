@@ -1,0 +1,32 @@
+diff --git a/src/3rdparty/chromium/third_party/devtools-frontend/src/BUILD.gn b/src/3rdparty/chromium/third_party/devtools-frontend/src/BUILD.gn
+index 965a9a0..f091d83 100644
+--- a/src/3rdparty/chromium/third_party/devtools-frontend/src/BUILD.gn
++++ b/src/3rdparty/chromium/third_party/devtools-frontend/src/BUILD.gn
+@@ -13,6 +13,12 @@ import("./third_party/blink/public/public_features.gni")
+ 
+ #-------------------------------------------------------------------------------
+ 
++if (is_qtwebengine && host_os == "win") {
++  pool("qtwebengine_rollup_pool") {
++    depth = 1
++  }
++}
++
+ devtools_frontend_resources_deps = [
+   ":favicon",
+   "front_end",
+diff --git a/src/3rdparty/chromium/third_party/devtools-frontend/src/scripts/build/ninja/bundle.gni b/src/3rdparty/chromium/third_party/devtools-frontend/src/scripts/build/ninja/bundle.gni
+index 93bde35..85e8479 100644
+--- a/src/3rdparty/chromium/third_party/devtools-frontend/src/scripts/build/ninja/bundle.gni
++++ b/src/3rdparty/chromium/third_party/devtools-frontend/src/scripts/build/ninja/bundle.gni
+@@ -49,6 +49,10 @@ template("bundle") {
+     node_action(target_name) {
+       script = "node_modules/@rollup/wasm-node/dist/bin/rollup"
+ 
++      if (is_qtwebengine && host_os == "win") {
++        pool = "//third_party/devtools-frontend/src:qtwebengine_rollup_pool"
++      }
++
+       forward_variables_from(invoker,
+                              [
+                                "visibility",
