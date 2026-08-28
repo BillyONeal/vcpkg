@@ -2,7 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO  strukturag/libheif
     REF "v${VERSION}"
-    SHA512 ebb0bf74d6d1ae2d39a7cefcec0f4a04006fee330e147c49c863f6d4febb45e82ccebf36cc4e30812bd3591918ee8964fbde9a3a4793c5f60eaf30a0e011add0
+    SHA512 d34ccd40d7f7cc48ff8ceddafd8f7c7004ab0df2a657237fcc715c4bcc453a41946d7db542d32b781875868ee116c451b4b63daaf073530245ec7b117ae60e27
     HEAD_REF master
     PATCHES
         cxx-linkage-pkgconfig.diff
@@ -21,14 +21,18 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
         hevc        VCPKG_LOCK_FIND_PACKAGE_X265
         iso23001-17 WITH_UNCOMPRESSED_CODEC
         iso23001-17 VCPKG_LOCK_FIND_PACKAGE_ZLIB
+        iso23001-17 VCPKG_LOCK_FIND_PACKAGE_Brotli
         jpeg        WITH_JPEG_DECODER
         jpeg        WITH_JPEG_ENCODER
         jpeg        VCPKG_LOCK_FIND_PACKAGE_JPEG
         openjpeg    WITH_OpenJPEG_DECODER
         openjpeg    WITH_OpenJPEG_ENCODER
         openjpeg    VCPKG_LOCK_FIND_PACKAGE_OpenJPEG
-        h264        WITH_X264
-        openh264    WITH_OpenH264_DECODER
+        uvg266      WITH_UVG266
+        uvg266      VCPKG_LOCK_FIND_PACKAGE_UVG266
+        x264        WITH_X264
+        h264-decoder WITH_OpenH264_DECODER
+        h264-decoder VCPKG_LOCK_FIND_PACKAGE_OpenH264
 )
 
 vcpkg_find_acquire_program(PKGCONFIG)
@@ -44,8 +48,6 @@ vcpkg_cmake_configure(
         -DWITH_DAV1D=OFF
         -DWITH_EXAMPLES=OFF
         -DWITH_LIBSHARPYUV=OFF
-        -DWITH_OpenH264_DECODER=OFF
-        -DVCPKG_LOCK_FIND_PACKAGE_Brotli=OFF
         -DVCPKG_LOCK_FIND_PACKAGE_Doxygen=OFF
         -DVCPKG_LOCK_FIND_PACKAGE_LIBDE265=ON   # feature candidate
         -DVCPKG_LOCK_FIND_PACKAGE_PNG=OFF
@@ -58,7 +60,9 @@ vcpkg_cmake_configure(
     MAYBE_UNUSED_VARIABLES
         VCPKG_LOCK_FIND_PACKAGE_AOM
         VCPKG_LOCK_FIND_PACKAGE_Brotli
+        VCPKG_LOCK_FIND_PACKAGE_OpenH264
         VCPKG_LOCK_FIND_PACKAGE_OpenJPEG
+        VCPKG_LOCK_FIND_PACKAGE_UVG266
         VCPKG_LOCK_FIND_PACKAGE_X265
         VCPKG_LOCK_FIND_PACKAGE_ZLIB
 )
