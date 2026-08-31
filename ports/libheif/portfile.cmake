@@ -7,6 +7,7 @@ vcpkg_from_github(
     PATCHES
         cxx-linkage-pkgconfig.diff
         find-modules.diff
+        fix-brotli-linkage.patch
         gdk-pixbuf.patch
         symbol-exports.diff
 )

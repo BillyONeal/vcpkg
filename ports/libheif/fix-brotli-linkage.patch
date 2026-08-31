@@ -1,0 +1,25 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bb0c554..e11e06d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -543,7 +543,7 @@ if (WITH_HEADER_COMPRESSION OR WITH_UNCOMPRESSED_CODEC)
+     find_package(Brotli)
+     if (Brotli_FOUND)
+         message("Brotli found")
+-        list(APPEND REQUIRES_PRIVATE "libbrotlidec")
++        list(APPEND REQUIRES_PRIVATE "libbrotlidec" "libbrotlienc")
+     else()
+         message("Brotli not found")
+     endif()
+diff --git a/cmake/modules/FindBrotli.cmake b/cmake/modules/FindBrotli.cmake
+index d0ea34c..060c876 100644
+--- a/cmake/modules/FindBrotli.cmake
++++ b/cmake/modules/FindBrotli.cmake
+@@ -23,4 +23,4 @@ find_package_handle_standard_args(Brotli
+ 
+ set(HAVE_BROTLI ${Brotli_FOUND})
+ set(BROTLI_INCLUDE_DIRS ${BROTLI_DEC_INCLUDE_DIR} ${BROTLI_ENC_INCLUDE_DIR})
+-set(BROTLI_LIBS "${BROTLICOMMON_LIBRARY}" "${BROTLI_DEC_LIB}"  "${BROTLI_ENC_LIB}")
+\ No newline at end of file
++set(BROTLI_LIBS "${BROTLI_DEC_LIB}" "${BROTLI_ENC_LIB}" "${BROTLI_COMMON_LIB}")
+\ No newline at end of file
