@@ -44,11 +44,14 @@ vcpkg_cmake_install()
 
 vcpkg_cmake_config_fixup()
 
-vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE.txt")
+vcpkg_install_copyright(
+    FILE_LIST
+        "${SOURCE_PATH}/LICENSE.txt"
+        "${SOURCE_PATH}/external_packages/FMI-Standard-2.0.2/headers/fmi2Functions.h"
+        "${SOURCE_PATH}/external_packages/FMI-Standard-3.0/headers/fmi3Functions.h"
+)
 
 vcpkg_fixup_pkgconfig()
-
-configure_file("${CMAKE_CURRENT_LIST_DIR}/usage" "${CURRENT_PACKAGES_DIR}/share/${PORT}/usage" COPYONLY)
 
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 vcpkg_copy_tools(TOOL_NAMES casadi-cli AUTO_CLEAN)
