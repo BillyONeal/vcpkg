@@ -1,0 +1,12 @@
+diff --git a/cmake/Helper.cmake b/cmake/Helper.cmake
+index f9cdcf2..126e93f 100644
+--- a/cmake/Helper.cmake
++++ b/cmake/Helper.cmake
+@@ -39,7 +39,6 @@ else()
+ 
+   if(NOT WASMEDGE_PLUGIN_WASI_NN_GGML_LLAMA_CUBLAS)
+     list(APPEND WASMEDGE_CFLAGS
+-      -Werror
+       -Wno-error=pedantic
+     )
+     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 13)
