@@ -21,6 +21,7 @@ set(CONFIGURE_OPTIONS
     --without-fortran
     --with-external-cminpack
     "--with-starlink=${CURRENT_INSTALLED_DIR}"
+    "CFLAGS=-std=gnu17 \$CFLAGS"
     FC=false
 )
 

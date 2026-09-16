@@ -26,6 +26,7 @@ vcpkg_make_configure(
   SOURCE_PATH ${SOURCE_PATH}
   AUTORECONF
   OPTIONS  --disable-binaries
+           "CFLAGS=-std=gnu17 \$CFLAGS"
            ${NO_DLFCN}
            ${OPTIONS}
 )
