@@ -3194,7 +3194,7 @@
     },
     "font-chef": {
       "baseline": "1.1.0",
-      "port-version": 0
+      "port-version": 1
     },
     "font-util": {
       "baseline": "1.4.2",
