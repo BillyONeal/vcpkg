@@ -7,6 +7,8 @@ vcpkg_from_github(
     REF "azure-storage-common_${VERSION}"
     SHA512 23c8e1b3b03907afe7487f09d1e97beb9379562ab4745ab275a95062fcda707e26b475136665c5a61379a08df1399e81f031659369fead54e3b70d23e089ec23
     HEAD_REF main
+    PATCHES
+        fix-missing-cstdint.patch # https://github.com/Azure/azure-sdk-for-cpp/commit/c14e67c1b9092e0217f5f00e7a2662c18c68be71
 )
 
 file(GLOB_RECURSE unused "${SOURCE_PATH}/cgmanifest.json")

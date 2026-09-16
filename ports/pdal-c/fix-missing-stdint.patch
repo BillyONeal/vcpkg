@@ -1,0 +1,23 @@
+diff --git a/source/pdal/pdalc_forward.h b/source/pdal/pdalc_forward.h
+index 766b935ddd5c52c04f15c79b1232a672f616c46f..51c8160bd7859b54d529248dae073fa658324e49 100644
+--- a/source/pdal/pdalc_forward.h
++++ b/source/pdal/pdalc_forward.h
+@@ -45,6 +45,8 @@
+  * Forward declarations for the PDAL C API.
+  */
+ 
++#include <stdint.h> // for uint32_t, uint64_t
++
+ #ifdef __cplusplus
+ #include <memory>
+ #include <set>
+@@ -70,9 +72,6 @@ using DimTypeList = std::unique_ptr<pdal::DimTypeList>;
+ 
+ }
+ }
+-
+-#else
+-#include <stdint.h> // for uint64_t
+ #endif /* __cplusplus */
+ 
+ typedef struct PDALDimType PDALDimType;

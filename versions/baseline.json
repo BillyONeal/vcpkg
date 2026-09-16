@@ -606,7 +606,7 @@
     },
     "azure-storage-common-cpp": {
       "baseline": "12.14.0",
-      "port-version": 0
+      "port-version": 1
     },
     "azure-storage-files-datalake-cpp": {
       "baseline": "12.16.0",
@@ -1982,7 +1982,7 @@
     },
     "configcat": {
       "baseline": "4.0.6",
-      "port-version": 0
+      "port-version": 1
     },
     "conjure-enum": {
       "baseline": "1.2.0",
@@ -2146,7 +2146,7 @@
     },
     "cpprealm": {
       "baseline": "2.2.0",
-      "port-version": 1
+      "port-version": 2
     },
     "cppslippi": {
       "baseline": "1.4.3.18",
@@ -5890,7 +5890,7 @@
     },
     "libui": {
       "baseline": "2018-11-03",
-      "port-version": 3
+      "port-version": 4
     },
     "libunibreak": {
       "baseline": "7.0",
@@ -7818,7 +7818,7 @@
     },
     "pdal-c": {
       "baseline": "2.2.0",
-      "port-version": 0
+      "port-version": 1
     },
     "pdal-dimbuilder": {
       "baseline": "2.10.1",
@@ -9478,7 +9478,7 @@
     },
     "sleepy-discord": {
       "baseline": "2025-12-18",
-      "port-version": 0
+      "port-version": 1
     },
     "slick-dynamic-buffer": {
       "baseline": "1.0.2",
@@ -10542,7 +10542,7 @@
     },
     "unleash-client-cpp": {
       "baseline": "1.5.4",
-      "port-version": 0
+      "port-version": 1
     },
     "unordered-dense": {
       "baseline": "5.2.0",
