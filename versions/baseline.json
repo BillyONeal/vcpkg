@@ -11242,7 +11242,7 @@
     },
     "xnnpack": {
       "baseline": "2024-08-20",
-      "port-version": 1
+      "port-version": 2
     },
     "xorg-macros": {
       "baseline": "1.20.2",
