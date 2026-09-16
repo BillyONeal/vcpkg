@@ -1,0 +1,48 @@
+diff --git a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/reliable_stream.hpp b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/reliable_stream.hpp
+index 373f8e6000ba85df9e585a71341e6998121788bf..751a8b4a62cea0bf2ddbcfbfe2314b68cae6c7aa 100644
+--- a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/reliable_stream.hpp
++++ b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/reliable_stream.hpp
+@@ -9,6 +9,7 @@
+ #include <azure/core/io/body_stream.hpp>
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <functional>
+ #include <memory>
+ 
+diff --git a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_decoding_stream.hpp b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_decoding_stream.hpp
+index 0c9fb018fd2516d0cf9f02805136527a3ee911ee..aa00cb08fd3d62262060079a3137690f72454edb 100644
+--- a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_decoding_stream.hpp
++++ b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_decoding_stream.hpp
+@@ -12,6 +12,7 @@
+ #include <azure/core/io/body_stream.hpp>
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <functional>
+ #include <memory>
+ 
+diff --git a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_encoding_stream.hpp b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_encoding_stream.hpp
+index 38e0a643cc30dea464be358dc8c46335fd20304b..3a36cb43735fc8a8c1d90e66878ad26e08fc10c1 100644
+--- a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_encoding_stream.hpp
++++ b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_encoding_stream.hpp
+@@ -12,6 +12,7 @@
+ #include <azure/core/io/body_stream.hpp>
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <functional>
+ #include <memory>
+ 
+diff --git a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_helper.hpp b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_helper.hpp
+index 270750419af9eb12f9097ca2a69406038f2b16b0..dae0b892908449d7030c204e07fb36de9719f0da 100644
+--- a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_helper.hpp
++++ b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_helper.hpp
+@@ -4,6 +4,7 @@
+ #pragma once
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <functional>
+ #include <memory>
+ #include <vector>

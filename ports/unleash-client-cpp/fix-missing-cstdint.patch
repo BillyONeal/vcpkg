@@ -1,0 +1,48 @@
+diff --git a/include/unleash/strategies/flexiblerollout.h b/include/unleash/strategies/flexiblerollout.h
+index ee4a2a8..3ad0258 100644
+--- a/include/unleash/strategies/flexiblerollout.h
++++ b/include/unleash/strategies/flexiblerollout.h
+@@ -1,6 +1,7 @@
+ #ifndef UNLEASH_FLEXIBLEROLLOUT_H
+ #define UNLEASH_FLEXIBLEROLLOUT_H
+ #include "strategy.h"
++#include <cstdint>
+ #include <string>
+ 
+ namespace unleash {
+diff --git a/include/unleash/strategies/gradualrolloutrandom.h b/include/unleash/strategies/gradualrolloutrandom.h
+index 9a5086b..502fe34 100644
+--- a/include/unleash/strategies/gradualrolloutrandom.h
++++ b/include/unleash/strategies/gradualrolloutrandom.h
+@@ -1,6 +1,7 @@
+ #ifndef UNLEASH_GRADUALROLLOUTRANDOM_H
+ #define UNLEASH_GRADUALROLLOUTRANDOM_H
+ #include "strategy.h"
++#include <cstdint>
+ #include <string>
+ 
+ namespace unleash {
+diff --git a/include/unleash/strategies/gradualrolloutsessionid.h b/include/unleash/strategies/gradualrolloutsessionid.h
+index a8df6ce..1c59381 100644
+--- a/include/unleash/strategies/gradualrolloutsessionid.h
++++ b/include/unleash/strategies/gradualrolloutsessionid.h
+@@ -1,6 +1,7 @@
+ #ifndef UNLEASH_GRADUALROLLOUTSESSIONID_H
+ #define UNLEASH_GRADUALROLLOUTSESSIONID_H
+ #include "strategy.h"
++#include <cstdint>
+ #include <string>
+ 
+ namespace unleash {
+diff --git a/include/unleash/strategies/gradualrolloutuserid.h b/include/unleash/strategies/gradualrolloutuserid.h
+index dba17d9..b21d6a7 100644
+--- a/include/unleash/strategies/gradualrolloutuserid.h
++++ b/include/unleash/strategies/gradualrolloutuserid.h
+@@ -1,6 +1,7 @@
+ #ifndef UNLEASH_GRADUALROLLOUTUSERID_H
+ #define UNLEASH_GRADUALROLLOUTUSERID_H
+ #include "strategy.h"
++#include <cstdint>
+ #include <string>
+ 
+ namespace unleash {

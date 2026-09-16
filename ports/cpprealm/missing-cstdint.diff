@@ -1,12 +1,51 @@
-diff --git a/include/cpprealm/internal/bridge/realm.hpp b/include/cpprealm/internal/bridge/realm.hpp
-index 38703d1..827c71d 100644
---- a/include/cpprealm/internal/bridge/realm.hpp
-+++ b/include/cpprealm/internal/bridge/realm.hpp
-@@ -27,6 +27,7 @@
- #include <optional>
- #include <string>
+diff --git a/include/cpprealm/internal/bridge/binary.hpp b/include/cpprealm/internal/bridge/binary.hpp
+index b51b53a787669d7aad2b20acc9c818652e1ce07d..4978a2531412c151a410dedb5a6019cf3aa37ce7 100644
+--- a/include/cpprealm/internal/bridge/binary.hpp
++++ b/include/cpprealm/internal/bridge/binary.hpp
+@@ -19,6 +19,7 @@
+ #ifndef CPPREALM_BRIDGE_BINARY_HPP
+ #define CPPREALM_BRIDGE_BINARY_HPP
+ 
++#include <cstdint>
  #include <vector>
+ #include <cpprealm/internal/bridge/utils.hpp>
+ 
+diff --git a/include/cpprealm/internal/bridge/object_id.hpp b/include/cpprealm/internal/bridge/object_id.hpp
+index bba39049b2b0abbde59439d97add891e2a3bda55..f3c4aea3917523ac13aa0c99a44ceb40b965c615 100644
+--- a/include/cpprealm/internal/bridge/object_id.hpp
++++ b/include/cpprealm/internal/bridge/object_id.hpp
+@@ -21,6 +21,7 @@
+ 
+ #include <cpprealm/internal/bridge/utils.hpp>
+ #include <array>
 +#include <cstdint>
  
  namespace realm {
-     class Realm;
+     struct object_id;
+diff --git a/include/cpprealm/internal/bridge/realm.hpp b/include/cpprealm/internal/bridge/realm.hpp
+index c7220b122e65f81a2e2d1191e80a49a359653428..9f46b5d1499998c942855d16ddb14e2f71e3b0f7 100644
+--- a/include/cpprealm/internal/bridge/realm.hpp
++++ b/include/cpprealm/internal/bridge/realm.hpp
+@@ -21,6 +21,7 @@
+ 
+ #include <cpprealm/internal/bridge/utils.hpp>
+ 
++#include <cstdint>
+ #include <functional>
+ #include <map>
+ #include <memory>
+diff --git a/include/cpprealm/internal/bridge/uuid.hpp b/include/cpprealm/internal/bridge/uuid.hpp
+index aee3e8affa696c23eec3510100b1f9f487622e89..6aecbb79a6ccc3d5c51935718c8b0d38d3b86eb4 100644
+--- a/include/cpprealm/internal/bridge/uuid.hpp
++++ b/include/cpprealm/internal/bridge/uuid.hpp
+@@ -20,8 +20,9 @@
+ #define CPPREALM_BRIDGE_UUID_HPP
+ 
+ #include <cpprealm/internal/bridge/utils.hpp>
+-#include <string_view>
+ #include <array>
++#include <cstdint>
++#include <string_view>
+ 
+ namespace realm {
+     struct uuid;
