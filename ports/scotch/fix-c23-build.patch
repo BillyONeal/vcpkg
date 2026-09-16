@@ -1,0 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b05667f..056e516 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -44,6 +44,10 @@
+ cmake_minimum_required(VERSION 3.10)
+ project(SCOTCH LANGUAGES C)
+ 
++if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
++  add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu17>)
++endif()
++
+ # Add module directory
+ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+ 

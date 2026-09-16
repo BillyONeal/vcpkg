@@ -91,8 +91,13 @@ if (VCPKG_TARGET_IS_WINDOWS)
         endif()
     endif()
 else()
+    if(VCPKG_TARGET_IS_LINUX)
+        set(c_standard_option "CFLAGS=-std=gnu17 \$CFLAGS")
+    endif()
+
     vcpkg_configure_make(
         SOURCE_PATH "${SOURCE_PATH}"
+        OPTIONS ${c_standard_option}
     )
     
     vcpkg_install_make()

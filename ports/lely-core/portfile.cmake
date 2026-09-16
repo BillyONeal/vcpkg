@@ -19,6 +19,7 @@ vcpkg_make_configure(
         "--disable-python"
         "--disable-unit-tests"
         "--disable-tools"
+        "CFLAGS=-std=gnu17 -Wno-error=unterminated-string-initialization \$CFLAGS"
 )
 vcpkg_make_install()
 

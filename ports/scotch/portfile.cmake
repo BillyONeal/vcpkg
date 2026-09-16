@@ -8,7 +8,9 @@ vcpkg_from_gitlab(
     REF "v${VERSION}"
     SHA512 9566ca800fd47df63844df6ff8b0fbbe8efbdea549914dfe9bf00d3d104a8c5631cfbef69e2677de68dcdb93addaeed158e6f6a373b5afe8cec82ac358946b65
     HEAD_REF master
-    PATCHES fix-build.patch
+    PATCHES
+        fix-build.patch
+        fix-c23-build.patch
 )
 
 vcpkg_find_acquire_program(FLEX)

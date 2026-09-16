@@ -7,6 +7,7 @@ vcpkg_from_github(
     PATCHES
         fix-install-error.patch
         fix-include-path.patch
+        fix-c23-build.patch
 )
 
 vcpkg_cmake_configure(

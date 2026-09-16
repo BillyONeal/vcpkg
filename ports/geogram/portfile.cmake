@@ -8,6 +8,7 @@ vcpkg_from_github(
         remove-hash-map.diff #   https://github.com/BrunoLevy/geogram/commit/4e500108606584abfe50e66cf5cc161ab4b3a8d3
                              # + https://github.com/BrunoLevy/geogram/commit/5c18dc89209189ab7b507ad230b50ef2952cae49
                              # + https://github.com/BrunoLevy/geogram/pull/353
+        fix-c23-build.patch
 )
 
 #third_party: amgcl

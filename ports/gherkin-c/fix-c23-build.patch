@@ -1,0 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3227bf5..2658c9e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,6 +1,10 @@
+ PROJECT(gherkin C)
+ cmake_minimum_required(VERSION 3.0)
+ 
++if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
++    add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu17>)
++endif()
++
+ option(BUILD_GHERKIN_TESTS "Build all of gherkin's own tests." OFF)
+ option(BUILD_SHARED_LIBS "Build shared library." OFF)
+ 

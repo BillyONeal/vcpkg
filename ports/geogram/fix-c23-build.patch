@@ -1,0 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ffa0615..5a1ee75 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -31,6 +31,10 @@ else()
+ project(Geogram VERSION "${VORPALINE_VERSION_PLAIN}")
+ endif()
+ 
++if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
++    add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu17>)
++endif()
++
+ # Optional modules
+ # (can be overriden in CMakeOptions.txt)
+ 
