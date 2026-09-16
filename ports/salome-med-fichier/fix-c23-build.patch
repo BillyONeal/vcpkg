@@ -1,0 +1,20 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9eceab7..231053a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,6 +1,10 @@
+ CMAKE_MINIMUM_REQUIRED(VERSION 3.8 FATAL_ERROR)
+ PROJECT(MEDFile C CXX)
+ 
++IF(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
++  ADD_COMPILE_OPTIONS($<$<COMPILE_LANGUAGE:C>:-std=gnu17>)
++ENDIF()
++
+ ## The following signature is still buggy as of CMake 2.8.11 - 
+ ## the OPTIONAL is not considered.
+ ## See http://www.cmake.org/Bug/view.php?id=10227
+@@ -220,4 +224,3 @@ INSTALL(FILES
+ IF(NOT _BUILT_AS_SUB)
+   INSTALL(EXPORT medfileTargets DESTINATION "${INSTALL_CMAKE_CONFIG_DIR}" FILE ${PROJECT_NAME}Targets.cmake)
+ ENDIF()
+-

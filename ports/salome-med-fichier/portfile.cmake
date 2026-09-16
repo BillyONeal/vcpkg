@@ -17,6 +17,7 @@ vcpkg_extract_source_archive(
     hdf5.patch
     include-io.patch
     quote-paths-in-install-code.diff # Required when CMake is in a path with spaces, e.g. C:\Program Files\CMake\bin\cmake.exe
+    fix-c23-build.patch
 )
 
 foreach(_source_file IN ITEMS "CMakeLists.txt" "CMakeLists.txt.in")
