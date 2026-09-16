@@ -1,0 +1,15 @@
+diff --git a/extra/libedit/libedit-20240808-3.1/src/terminal.c b/extra/libedit/libedit-20240808-3.1/src/terminal.c
+index 895a2176..9a0477fd 100644
+--- a/extra/libedit/libedit-20240808-3.1/src/terminal.c
++++ b/extra/libedit/libedit-20240808-3.1/src/terminal.c
+@@ -68,6 +68,10 @@ __RCSID("$NetBSD: terminal.c,v 1.46 2023/02/04 14:34:28 christos Exp $");
+ #include <term.h>
+ #endif
+ 
++#if !defined(HAVE_TERMCAP_H) && !defined(__sun)
++extern char *tgoto(const char *, int, int);
++#endif
++
+ #if defined(__sun)
+ extern int tgetent(char *, const char *);
+ extern int tgetflag(char *);

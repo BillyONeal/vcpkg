@@ -5430,7 +5430,7 @@
     },
     "libmysql": {
       "baseline": "8.0.46",
-      "port-version": 0
+      "port-version": 1
     },
     "libnatpmp": {
       "baseline": "2025-04-03",
