@@ -6,6 +6,7 @@ vcpkg_from_github(
     HEAD_REF master
     PATCHES
         devendor_libs.diff
+        fix-gcc15-chrono-ambiguity.patch
 )
 
 file(REMOVE_RECURSE "${SOURCE_PATH}/ext")
