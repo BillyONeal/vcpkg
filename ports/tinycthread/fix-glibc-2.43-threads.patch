@@ -1,0 +1,12 @@
+diff --git a/source/tinycthread.h b/source/tinycthread.h
+index 2fc7f62..35a90bf 100644
+--- a/source/tinycthread.h
++++ b/source/tinycthread.h
+@@ -80,6 +80,7 @@ extern "C" {
+ #endif
+ 
+ /* Generic includes */
++#include <stdlib.h>
+ #include <time.h>
+ 
+ /* Platform specific includes */
