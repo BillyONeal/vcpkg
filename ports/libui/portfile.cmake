@@ -12,6 +12,7 @@ vcpkg_from_github(
         "001-fix-cmake.patch"
         "002-fix-macosx-build.patch"
         "003-fix-system-link.patch"
+        "004-fix-missing-strings.patch"
 )
 
 vcpkg_cmake_configure(
