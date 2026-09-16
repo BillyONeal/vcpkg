@@ -14,6 +14,7 @@ vcpkg_from_github(
         fix_dup_symbols.patch
         cross-build.patch
         fix-pdb-install-path.patch
+        fix-libedit-tgoto-declaration.patch
 )
 
 file(GLOB third_party "${SOURCE_PATH}/extra/*" "${SOURCE_PATH}/include/boost_1_*")
