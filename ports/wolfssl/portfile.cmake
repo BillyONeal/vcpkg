@@ -4,6 +4,8 @@ vcpkg_from_github(
     REF "v${VERSION}-stable"
     SHA512 ed0f6bff353b1a835e1f1c15e1863eda9e04030962211be64d7c764f8373b016778e04ea9538ca6cf2f58d55d0f855c2af1739d776f9697b2f4a13a5e489d85f
     HEAD_REF master
+    PATCHES
+        disable-warnings-as-errors.patch
 )
 
 if ("asio" IN_LIST FEATURES)
