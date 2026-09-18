@@ -1,0 +1,11 @@
+diff --git a/include/configcat/pollingmode.h b/include/configcat/pollingmode.h
+index a8663c0..4da37f8 100644
+--- a/include/configcat/pollingmode.h
++++ b/include/configcat/pollingmode.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <cstdint>
+ #include <functional>
+ #include <memory>
+ #include <string>

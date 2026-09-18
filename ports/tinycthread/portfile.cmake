@@ -6,6 +6,8 @@ vcpkg_from_github(
     REF 6957fc8383d6c7db25b60b8c849b29caab1caaee
     SHA512 d8b1ad73676f90b236bef06464cfd34996e7b6676ef28cf011cfff86d63e9d6322f7b00ca15290b3f87ed40e704d5325f676440d0223a7f8716d3392a5d1345d
     HEAD_REF master
+    PATCHES
+        fix-glibc-2.43-threads.patch
 )
 
 vcpkg_cmake_configure(

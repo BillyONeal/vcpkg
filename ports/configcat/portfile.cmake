@@ -8,6 +8,8 @@ vcpkg_from_github(
     REF "v${VERSION}"
     SHA512 89f0697de90f29476a3b1396df6cb466a2071feae9c3e828167eda70451c3c464e6979584855032c18283ce94a5bc387efef95ac5da656619761b093519fe383
     HEAD_REF master
+    PATCHES
+        fix-missing-cstdint.patch
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS

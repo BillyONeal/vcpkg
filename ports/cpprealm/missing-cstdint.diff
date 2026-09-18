@@ -1,3 +1,33 @@
+diff --git a/include/cpprealm/internal/bridge/binary.hpp b/include/cpprealm/internal/bridge/binary.hpp
+index b51b53a..4978a25 100644
+--- a/include/cpprealm/internal/bridge/binary.hpp
++++ b/include/cpprealm/internal/bridge/binary.hpp
+@@ -19,6 +19,7 @@
+ #ifndef CPPREALM_BRIDGE_BINARY_HPP
+ #define CPPREALM_BRIDGE_BINARY_HPP
+ 
++#include <cstdint>
+ #include <vector>
+ #include <cpprealm/internal/bridge/utils.hpp>
+ 
+diff --git a/include/cpprealm/internal/bridge/object_id.hpp b/include/cpprealm/internal/bridge/object_id.hpp
+index bba3904..66fd445 100644
+--- a/include/cpprealm/internal/bridge/object_id.hpp
++++ b/include/cpprealm/internal/bridge/object_id.hpp
+@@ -19,6 +19,8 @@
+ #ifndef CPPREALM_BRIDGE_OBJECT_ID_HPP
+ #define CPPREALM_BRIDGE_OBJECT_ID_HPP
+ 
++#include <cstdint>
++
+ #include <cpprealm/internal/bridge/utils.hpp>
+ #include <array>
+ 
+@@ -62,4 +64,3 @@ namespace realm::internal::bridge {
+ }
+ 
+ #endif //CPPREALM_BRIDGE_OBJECT_ID_HPP
+-
 diff --git a/include/cpprealm/internal/bridge/realm.hpp b/include/cpprealm/internal/bridge/realm.hpp
 index 38703d1..827c71d 100644
 --- a/include/cpprealm/internal/bridge/realm.hpp
@@ -10,3 +40,16 @@ index 38703d1..827c71d 100644
  
  namespace realm {
      class Realm;
+diff --git a/include/cpprealm/internal/bridge/uuid.hpp b/include/cpprealm/internal/bridge/uuid.hpp
+index aee3e8a..85cc483 100644
+--- a/include/cpprealm/internal/bridge/uuid.hpp
++++ b/include/cpprealm/internal/bridge/uuid.hpp
+@@ -19,6 +19,8 @@
+ #ifndef CPPREALM_BRIDGE_UUID_HPP
+ #define CPPREALM_BRIDGE_UUID_HPP
+ 
++#include <cstdint>
++
+ #include <cpprealm/internal/bridge/utils.hpp>
+ #include <string_view>
+ #include <array>

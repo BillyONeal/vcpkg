@@ -1,0 +1,12 @@
+diff --git a/source/pdal/pdalc_forward.h b/source/pdal/pdalc_forward.h
+index 766b935..ebed4ba 100644
+--- a/source/pdal/pdalc_forward.h
++++ b/source/pdal/pdalc_forward.h
+@@ -46,6 +46,7 @@
+  */
+ 
+ #ifdef __cplusplus
++#include <cstdint>
+ #include <memory>
+ #include <set>
+ #include <vector>
