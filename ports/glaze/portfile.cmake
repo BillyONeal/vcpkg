@@ -10,6 +10,8 @@ vcpkg_from_github(
     HEAD_REF main
     PATCHES
         001-fix-asio.patch
+        # https://github.com/stephenberry/glaze/commit/57d78dd5d330db6b75367d303970ffd2e46106e7
+        002-fix-arm64-neon-initialization.patch
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
