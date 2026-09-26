@@ -25,6 +25,18 @@ vcpkg_cmake_configure(
 vcpkg_cmake_install()
 vcpkg_cmake_config_fixup(CONFIG_PATH "lib/cmake/libdwarf")
 vcpkg_fixup_pkgconfig()
+
+if(VCPKG_TARGET_IS_WINDOWS AND NOT BUILD_STATIC)
+    if(NOT VCPKG_BUILD_TYPE OR VCPKG_BUILD_TYPE STREQUAL "release")
+        file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/bin")
+        file(COPY_FILE "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/src/lib/libdwarf/dwarf.dll" "${CURRENT_PACKAGES_DIR}/bin/dwarf.dll")
+    endif()
+    if(NOT VCPKG_BUILD_TYPE OR VCPKG_BUILD_TYPE STREQUAL "debug")
+        file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/debug/bin")
+        file(COPY_FILE "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg/src/lib/libdwarf/dwarf.dll" "${CURRENT_PACKAGES_DIR}/debug/bin/dwarf.dll")
+    endif()
+endif()
+
 vcpkg_copy_pdbs()
 vcpkg_copy_tools(TOOL_NAMES dwarfdump AUTO_CLEAN)
 
