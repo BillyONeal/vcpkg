@@ -1,0 +1,56 @@
+diff --git a/src/lib/libdwarf/CMakeLists.txt b/src/lib/libdwarf/CMakeLists.txt
+index 367db8d..711df82 100644
+--- a/src/lib/libdwarf/CMakeLists.txt
++++ b/src/lib/libdwarf/CMakeLists.txt
+@@ -165,6 +165,10 @@ target_include_directories(dwarf-static PUBLIC
+   )
+ add_library(libdwarf::dwarf-static ALIAS dwarf-static)
+ 
++set(DWARF_PKGCONFIG_LIB dwarf)
++if(INSTALL_STATIC_LIBRARIES AND WIN32)
++  set(DWARF_PKGCONFIG_LIB dwarf-static)
++endif()
+ configure_file(libdwarf.pc.in libdwarf.pc @ONLY)
+ 
+ # The install has to be here, not in
+@@ -177,20 +181,23 @@ write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/libdwarfConfigVers
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libdwarfConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/libdwarfConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/libdwarf")
+ 
+ if(INSTALL_STATIC_LIBRARIES)
+-  set(DWARF_STATIC_LIB "dwarf-static")
++  set(DWARF_INSTALL_TARGET dwarf-static)
++else()
++  set(DWARF_INSTALL_TARGET dwarf-shared)
+ endif()
+ 
+-install(TARGETS dwarf-shared ${DWARF_STATIC_LIB}
++install(TARGETS ${DWARF_INSTALL_TARGET}
+         EXPORT libdwarfTargets
+         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+-        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
++        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
++        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libdwarf")
+ install(EXPORT libdwarfTargets
+         FILE libdwarf-targets.cmake
+         NAMESPACE libdwarf::
+         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/libdwarf")
+ export(
+-  TARGETS dwarf-shared ${DWARF_STATIC_LIB}
++  TARGETS ${DWARF_INSTALL_TARGET}
+   NAMESPACE libdwarf::
+   FILE "${CMAKE_CURRENT_BINARY_DIR}/libdwarf-targets.cmake"
+ )
+diff --git a/src/lib/libdwarf/libdwarf.pc.in b/src/lib/libdwarf/libdwarf.pc.in
+index 4a094d1..e77841a 100644
+--- a/src/lib/libdwarf/libdwarf.pc.in
++++ b/src/lib/libdwarf/libdwarf.pc.in
+@@ -7,7 +7,7 @@ includedir="${prefix}/include/libdwarf"
+ Name: libdwarf
+ Description: DWARF debug symbols library
+ Version: @PROJECT_VERSION@
+-Libs: -L${libdir} -ldwarf
++Libs: -L${libdir} -l@DWARF_PKGCONFIG_LIB@
+ Cflags: -I${includedir}
+ Requires.private: zlib libzstd
+ 
