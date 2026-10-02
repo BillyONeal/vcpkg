@@ -1,0 +1,171 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d4ac262..8c5b08e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -61,8 +61,18 @@ add_custom_target(lib DEPENDS blitz)
+ 
+ #   Configuration files.
+ 
+-CreatePkgConfigInfo(blitz "")
+-CreatePkgConfigInfo(blitz-static static)
++set(BLITZ_PKGCONFIG_FILES ${CMAKE_BINARY_DIR}/blitz.pc)
++if (BUILD_SHARED_LIBS)
++    if (WIN32 AND NOT MINGW)
++        list(REMOVE_ITEM PKGCONFIG_LIBS -lblitz)
++        list(PREPEND PKGCONFIG_LIBS -lblitz.dll)
++    endif()
++    CreatePkgConfigInfo(blitz "")
++else()
++    CreatePkgConfigInfo(blitz static)
++    CreatePkgConfigInfo(blitz-static static)
++    list(APPEND BLITZ_PKGCONFIG_FILES ${CMAKE_BINARY_DIR}/blitz-static.pc)
++endif()
+ 
+ write_basic_package_version_file(
+     cmake/${PROJECT_NAME}ConfigVersion.cmake
+@@ -76,9 +86,7 @@ configure_package_config_file(
+ #   Installation
+ 
+ install(EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake)
+-install(FILES
+-        ${CMAKE_BINARY_DIR}/blitz.pc
+-		${CMAKE_BINARY_DIR}/blitz-static.pc 
++install(FILES ${BLITZ_PKGCONFIG_FILES}
+         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+ install(FILES
+         ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake
+diff --git a/blitz/CMakeLists.txt b/blitz/CMakeLists.txt
+index a3839b1..1ee209c 100644
+--- a/blitz/CMakeLists.txt
++++ b/blitz/CMakeLists.txt
+@@ -61,13 +61,13 @@ set(DEPS ${DEP_PKGS} LIBRARIES ${DEP_LIBS} PARENT_SCOPE)
+ if (NOT CHECKED_COMPILER_CXX_FEATURES)
+     CHECK_ALL_CXX_FEATURES(BZ_)
+     CHECK_HEADER(HAVE_INTTYPES_H inttypes.h)
+-    set(BZ_MATH_ABSINT_IN_NAMESPACE_STD ${BZ_HAVE_MATH_ABSINT_IN_NAMESPACE_STD})
+-    set(BZ_MATH_FN_IN_NAMESPACE_STD     ${BZ_HAVE_MATH_FN_IN_NAMESPACE_STD})
+-    set(BZ_ISNAN_IN_NAMESPACE_STD       ${BZ_HAVE_ISNAN_IN_NAMESPACE_STD})
+-    set(BZ_HAVE_NCEG_RESTRICT_EGCS      ${BZ_HAVE_RESTRICT_EGCS})
+-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.cmake.h.in ${BLITZ_CONFIG_FILE})
+     set(CHECKED_COMPILER_CXX_FEATURES TRUE CACHE INTERNAL "Gating variable to avoid checking compiler features multiple times")
+ endif()
++set(BZ_MATH_ABSINT_IN_NAMESPACE_STD ${BZ_HAVE_MATH_ABSINT_IN_NAMESPACE_STD})
++set(BZ_MATH_FN_IN_NAMESPACE_STD     ${BZ_HAVE_MATH_FN_IN_NAMESPACE_STD})
++set(BZ_ISNAN_IN_NAMESPACE_STD       ${BZ_HAVE_ISNAN_IN_NAMESPACE_STD})
++set(BZ_HAVE_NCEG_RESTRICT_EGCS      ${BZ_HAVE_RESTRICT_EGCS})
++configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.cmake.h.in ${BLITZ_CONFIG_FILE})
+ 
+ macro(GENERATE_BLITZ_HEADER header prog var)
+     add_custom_target(${header} ALL)
+diff --git a/blitz/generate/CMakeLists.txt b/blitz/generate/CMakeLists.txt
+index c8b3736..02f60da 100644
+--- a/blitz/generate/CMakeLists.txt
++++ b/blitz/generate/CMakeLists.txt
+@@ -1,10 +1,20 @@
+-add_executable(genarrbops  genarrbops.cpp)
+-add_executable(genarruops  genarruops.cpp)
+-add_executable(genmatbops  genmatbops.cpp)
+-add_executable(genmatuops  genmatuops.cpp)
+-add_executable(genvecbops  genvecbops.cpp)
+-add_executable(genvecuops  genvecuops.cpp)
+-add_executable(genvecwhere genvecwhere.cpp)
+-add_executable(genvecbfn   genvecbfn.cpp)
+-add_executable(genmathfunc genmathfunc.cpp)
+-add_executable(genpromote  genpromote.cpp)
++set(BLITZ_GENERATORS
++    genarrbops genarruops genmatbops genmatuops genvecbops genvecuops
++    genvecwhere genvecbfn genmathfunc genpromote)
++
++foreach(generator IN LISTS BLITZ_GENERATORS)
++    if (BLITZ_HOST_TOOLS_DIR)
++        set(generator_path "${BLITZ_HOST_TOOLS_DIR}/${generator}${BLITZ_HOST_EXECUTABLE_SUFFIX}")
++        if (NOT EXISTS "${generator_path}")
++            message(FATAL_ERROR "Missing host generator: ${generator_path}")
++        endif()
++        add_executable(${generator} IMPORTED GLOBAL)
++        set_target_properties(${generator} PROPERTIES IMPORTED_LOCATION "${generator_path}")
++    else()
++        add_executable(${generator} ${generator}.cpp)
++    endif()
++endforeach()
++
++if (NOT BLITZ_HOST_TOOLS_DIR)
++    install(TARGETS ${BLITZ_GENERATORS} RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
++endif()
+diff --git a/cmake/CreatePkgConfig.cmake b/cmake/CreatePkgConfig.cmake
+index 4afc41e..01a63cb 100644
+--- a/cmake/CreatePkgConfig.cmake
++++ b/cmake/CreatePkgConfig.cmake
+@@ -9,9 +9,7 @@ function (CreatePkgConfigInfo filename mode)
+             set(addlink -lstdc++)
+         endif()
+         set(cflags)
+-        set(static)
+         if ("${mode}" STREQUAL "static")
+-            set(static -static)
+             # Under Windows and MinGW, add BZ_STATIC_LIB flag
+             if (WIN32 OR MINGW)
+                 set(cflags -DBZ_STATIC_LIB)
+@@ -23,14 +21,13 @@ prefix=@pkgconfig_prefix@
+ exec_prefix=\${prefix}
+ libdir=\${prefix}/@CMAKE_INSTALL_LIBDIR@
+ includedir=\${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+-confdir=\${prefix}/@CMAKE_INSTALL_LIBDIR@/@pkgconfig_package_name@
+ 
+ Name: @pkgconfig_package_name@
+ Description: @pkgconfig_package_description@
+ Version: @CPACK_PACKAGE_VERSION_MAJOR@.@CPACK_PACKAGE_VERSION_MINOR@.@CPACK_PACKAGE_VERSION_PATCH@
+ Requires: @PACKAGE_REQUIRES@
+-Libs: -L\${libdir} ${static} @PKGCONFIG_LIBS@ ${addlink}
+-Cflags: -I\${includedir} -I\${confdir} @CPPFLAGS@ ${cflags}")
++Libs: -L\${libdir} @PKGCONFIG_LIBS@ ${addlink}
++Cflags: -I\${includedir} @CPPFLAGS@ ${cflags}")
+         set(PKGCONFIG_TEMPLATE ${CMAKE_BINARY_DIR}/${template_filename})
+     endif()
+ 
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index f8fd9cd..69ce734 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -1,5 +1,9 @@
+ set(blitz_LIB_SRCS globals.cpp)
+-add_library(blitz SHARED ${blitz_LIB_SRCS})
++add_library(blitz ${blitz_LIB_SRCS})
++target_include_directories(blitz PUBLIC
++    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
++    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
++    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+ 
+ if (ENABLE_SERIALISATION)
+ 	set(Boost_USE_STATIC_LIBS        ON) # only find static libs
+@@ -23,24 +27,18 @@ set_target_properties(blitz PROPERTIES
+                       VERSION ${blitz_VERSION}
+                       SOVERSION 0
+                       CLEAN_DIRECT_OUTPUT 1)
+-if (WIN32 AND NOT MINGW)
++if (BUILD_SHARED_LIBS AND WIN32 AND NOT MINGW)
+ 	set_target_properties(blitz PROPERTIES
+ 						  IMPORT_SUFFIX ".dll.lib")
+ endif()
+ 
+ set(BLITZ_LIBS blitz)
+ 
+-add_library(blitz-static STATIC ${blitz_LIB_SRCS})
+-add_dependencies(blitz-static generated-headers)
+-set(BLITZ_LIBS ${BLITZ_LIBS} blitz-static)
+-set_target_properties(blitz-static PROPERTIES
+-					  OUTPUT_NAME blitz
+-					  ${BLITZ-STATIC-DEFS}
+-					  CLEAN_DIRECT_OUTPUT 1)
+-
+-# Under Windows and MinGW, set BZ_STATIC_LIB flag during compilation
+-if (WIN32 OR MINGW)
+-	target_compile_options(blitz-static PUBLIC -DBZ_STATIC_LIB)
++if (NOT BUILD_SHARED_LIBS)
++    target_compile_definitions(blitz PUBLIC BZ_STATIC_LIB)
++    add_library(blitz-static INTERFACE)
++    target_link_libraries(blitz-static INTERFACE blitz)
++    list(APPEND BLITZ_LIBS blitz-static)
+ endif()
+ 
+ install(TARGETS ${BLITZ_LIBS}
