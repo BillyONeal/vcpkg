@@ -109,4 +109,24 @@ if (no_rendering_backend OR no_platform_backend)
     ")
 endif()
 
-vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
+vcpkg_install_copyright(
+    FILE_LIST
+        "${SOURCE_PATH}/LICENSE"
+        "${SOURCE_PATH}/src/hello_imgui/internal/whereami/LICENSE.MIT"
+        "${SOURCE_PATH}/src/hello_imgui/internal/pnm.h"
+        "${SOURCE_PATH}/src/hello_imgui/internal/imguial_term.h"
+        "${SOURCE_PATH}/src/hello_imgui/internal/inicpp.h"
+    COMMENT [[The Hello ImGui source archive does not include the full license texts for its bundled fonts:
+DroidSans.ttf: Digitized data copyright (c) 2007, Google Corporation. Licensed under Apache-2.0.
+https://github.com/google/fonts/blob/5fb32282c5969930c4268483ffa5664680bf73c8/apache/droidsans/LICENSE.txt
+Font_Awesome_6_Free-Solid-900.otf (Font Awesome 6.5.1): Licensed under OFL-1.1.
+https://github.com/FortAwesome/Font-Awesome/blob/deeea78c52bfe00b6e251ffddccf5570d5fdb05e/LICENSE.txt
+fontawesome-webfont.ttf (Font Awesome 4.7.0): Copyright Dave Gandy 2016. All rights reserved.
+Font Awesome 4.7.0 is licensed under OFL-1.1, as stated at:
+https://github.com/FortAwesome/Font-Awesome/blob/a8386aae19e200ddb0f6845b5feeee5eb7013687/README.md#license
+Only font files are installed from Font Awesome; the CC-BY-4.0 SVG/JS icons are not included.
+
+The bundled inifile-cpp header identifies Fabian Meyer as its author and declares the MIT license,
+but the Hello ImGui source archive does not include its full license text:
+https://github.com/Rookfighter/inifile-cpp/blob/7bb1ec3534768e0d1fd9893d01027468b72af5ec/LICENSE.txt]]
+)
