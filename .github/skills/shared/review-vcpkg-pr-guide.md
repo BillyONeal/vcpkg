@@ -14,6 +14,8 @@ Only for `review-depth = examples-and-patches`, prepare individual validated `gi
 
 Verify consistent application of the [maintainer guide](https://raw.githubusercontent.com/MicrosoftDocs/vcpkg-docs/refs/heads/main/vcpkg/contributing/maintainer-guide.md) and that each port's installed contents work for end users.
 
+Use the supplied maintainer-guide snapshot instead of fetching the mutable URL above; cite its provenance's commit-pinned URL. Batch reads of both entire guides using the supplied ranges, provenance, and `evidenceRoot/pr-summary.json`. Read the trimmed `comments.json`, `reviews.json`, `review-comments.json`, `files.json`, and `checks.json` as needed, and `pr.diff` for the changeset. Full API responses remain under `evidenceRoot/raw/`; inspect only when a needed field is absent from the trimmed evidence. This snapshot does not replace upstream research, CI logs, or checks of newer activity. Record its reviewed head and comparison SHAs.
+
 Use verdict `approve`, `approve-with-notes`, `request-changes`, or `unknown`.
 
 ## Report structure

@@ -18,15 +18,19 @@ description: Review open non-draft microsoft/vcpkg pull requests updated in the 
 
 ## Procedure
 
-1. Before changing directories, resolve `investigation-root`, `reviews/`, and `.github/skills/shared/review-vcpkg-pr-guide.md` against the caller's original directory to absolute paths. Keep the resolved reviews directory as `reviews-root`; never rebase it onto a worker's workspace.
-2. Discover candidates using GitHub search (`gh api` or the Search API), not the generic pulls list: `repo:microsoft/vcpkg is:pr is:open draft:false updated:>=<today minus 30 days>`. Prefer authentication via `gh` or `GITHUB_TOKEN` to avoid low unauthenticated limits.
-3. Fetch each candidate's changed files; identify ports from `ports/<portname>/`.
-4. Prepare isolated workspaces as below. Review every candidate independently with a `general-purpose` worker using its default high-capability model; do not override it with a fast or lightweight model. Require it to read the entire guide and follow every instruction. Group competition only in the final index. Pass each worker:
+1. Before changing directories, resolve `investigation-root`, `reviews/`, and the shared helper scripts against the caller's original directory to absolute paths. Keep the resolved reviews directory as `reviews-root`; never rebase it onto a worker's workspace.
+2. Ensure `gh` is authenticated, then run [Get-VcpkgReviewEvidence.ps1](../shared/Get-VcpkgReviewEvidence.ps1) with `-InvestigationRoot <absolute-path>` and no `-PrNumber`.
+3. Read the returned `manifestPath`, then run [New-VcpkgReviewWorkspaces.ps1](../shared/New-VcpkgReviewWorkspaces.ps1) with `-ManifestPath <manifestPath> -CallerRoot <original-repository-root> -ReviewsRoot <reviews-root>`. Read the returned `workersPath`. Preserve every failed entry and its reason for the index; never silently omit it. Use the evidence manifest's affected ports and competition groups for the index. See [shared helper documentation](../shared/review-helpers.md) only if needed.
+4. For each ready entry in the worker manifest, launch an independent `general-purpose` worker using its default high-capability model; do not override it with a fast or lightweight model. Require it to read the entire guide and follow every instruction. Group competition only in the final index. Pass each worker:
    - PR number (`{{PR_NUMBER}}`).
    - Selected `review-depth`.
    - Absolute workspace and worker-local `investigation-root`.
    - Absolute `{{REPORT_DIR}}` (`pr-{{PR_NUMBER}}` under `reviews-root`).
-   - Absolute guide path.
+   - Absolute `guidePath`, `maintainerGuidePath`, and `maintainerGuideMetadataPath` from the worker manifest.
+   - `guideReadRanges` and `maintainerGuideReadRanges`; pass each range's `start`/`end` as `view_range`.
+   - Absolute `evidenceRoot`, reviewed `headSha`, and comparison `baseSha`.
+   - The worker's inherited `downloads` setting, if nonempty.
+   - Instructions to read both entire guides using the supplied ranges, guide provenance, and `evidenceRoot/pr-summary.json` in one parallel read batch, then batch subsequent independent evidence reads. Use the supplied maintainer-guide snapshot rather than downloading it again. Cite its pinned source URL.
 5. Write each report when completed. Write `index.md` last from the final per-PR results and port-specific competition groups.
 
 ## Parallel execution safety
