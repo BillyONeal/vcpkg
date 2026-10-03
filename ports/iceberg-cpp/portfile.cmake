@@ -38,7 +38,7 @@ vcpkg_cmake_configure(
         -DCMAKE_DISABLE_FIND_PACKAGE_Git=ON
         -DVCPKG_LOCK_FIND_PACKAGE_zstd=OFF
     MAYBE_UNUSED_VARIABLES
-        VCPKG_LOCK_FIND_PACKAGE_zstd
+        VCPKG_LOCK_FIND_PACKAGE_zstd # Used only with the bundle feature.
 )
 
 vcpkg_cmake_install()
@@ -49,6 +49,18 @@ file(REMOVE_RECURSE
     "${CURRENT_PACKAGES_DIR}/debug/include"
     "${CURRENT_PACKAGES_DIR}/debug/share"
 )
+
+if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
+    file(GLOB_RECURSE export_headers "${CURRENT_PACKAGES_DIR}/include/iceberg/iceberg*_export.h")
+    foreach(header IN LISTS export_headers)
+        get_filename_component(static_macro "${header}" NAME_WE)
+        string(TOUPPER "${static_macro}" static_macro)
+        string(REPLACE "_EXPORT" "_STATIC" static_macro "${static_macro}")
+        vcpkg_replace_string("${header}" "#pragma once"
+            "#pragma once\n\n#ifndef ${static_macro}\n#define ${static_macro}\n#endif"
+        )
+    endforeach()
+endif()
 
 file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
 vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE" "${SOURCE_PATH}/NOTICE")
