@@ -1,6 +1,21 @@
---- configure.ac.original	2022-12-15 13:46:24.222223600 -0500
-+++ configure.ac	2022-12-28 09:30:59.301984700 -0500
-@@ -114,6 +114,12 @@
+diff --git a/config.h.in b/config.h.in
+index 794e00c..c470dfc 100644
+--- a/config.h.in
++++ b/config.h.in
+@@ -1,5 +1,8 @@
+ /* config.h.in (GLPK configuration template file) */
+ 
++#undef __WOE__
++/* defined if building for MS Windows */
++
+ #undef HAVE_SYS_TIME_H
+ /* defined if the <sys/time.h> header can be used */
+ 
+diff --git a/configure.ac b/configure.ac
+index cbdb724..752e0b9 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -114,6 +114,12 @@ case $host_os in
        LIBODBC="libodbc.dylib"
        LIBMYSQL="libmysqlclient.dylib"
        ;;
@@ -13,7 +28,7 @@
     *)
        LIBIODBC="libiodbc.so"
        LIBODBC="libodbc.so"
-@@ -145,7 +151,6 @@
+@@ -145,7 +151,6 @@ if test "$enable_mysql" = "yes"; then
        AC_MSG_ERROR([--enable-mysql requires --enable-dl])
     fi
     AC_MSG_RESULT([yes])
