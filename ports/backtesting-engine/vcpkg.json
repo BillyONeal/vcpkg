@@ -4,7 +4,7 @@
   "description": "C++20 backtesting engine with CMake package exports and an optional C API wrapper",
   "homepage": "https://github.com/Vins-z/Backtesting-Engine",
   "license": "MIT",
-  "supports": "!windows",
+  "supports": "!windows & !(static & staticcrt)",
   "dependencies": [
     "curl",
     "eigen3",
