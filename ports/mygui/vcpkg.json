@@ -3,7 +3,7 @@
   "version": "3.5.2",
   "description": "Fast, flexible and simple GUI",
   "homepage": "http://mygui.info",
-  "license": "MIT",
+  "license": "MIT AND BSL-1.0",
   "supports": "!uwp",
   "dependencies": [
     "freetype",

@@ -22,6 +22,7 @@ vcpkg_cmake_configure(
         -DMYGUI_BUILD_TEST_APP=FALSE
         -DMYGUI_BUILD_WRAPPER=FALSE
         -DMYGUI_BUILD_DOCS=FALSE
+        -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON
         -DMYGUI_BUILD_TOOLS=FALSE
         -DMYGUI_BUILD_ADVANCED_DEMOS=FALSE
         -DMYGUI_USE_SYSTEM_PUGIXML=TRUE
@@ -41,5 +42,7 @@ file(REMOVE_RECURSE
 vcpkg_fixup_pkgconfig()
 vcpkg_copy_pdbs()
 
-# Handle copyright
-file(INSTALL "${SOURCE_PATH}/COPYING.MIT" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST
+    "${SOURCE_PATH}/COPYING.MIT"
+    "${SOURCE_PATH}/MyGUIEngine/include/MyGUI_Any.h"
+)
