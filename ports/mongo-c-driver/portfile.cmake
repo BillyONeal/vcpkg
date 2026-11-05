@@ -93,9 +93,12 @@ file(REMOVE_RECURSE
 
 file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION  "${CURRENT_PACKAGES_DIR}/share/${PORT}")
 
+# LicenseRef-IBM-DHCP refers to the IBM notice in THIRD_PARTY_NOTICES.
 vcpkg_install_copyright(
     FILE_LIST
         "${SOURCE_PATH}/COPYING"
         "${SOURCE_PATH}/THIRD_PARTY_NOTICES"
         "${SOURCE_PATH}/src/libmongoc/THIRD_PARTY_NOTICES"
+        "${SOURCE_PATH}/src/libmongoc/src/mongoc/mongoc-memcmp.c"
+        "${SOURCE_PATH}/src/kms-message/src/sort.c"
 )
