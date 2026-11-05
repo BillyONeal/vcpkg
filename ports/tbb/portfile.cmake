@@ -16,6 +16,8 @@ vcpkg_check_features(
         hwloc TBB_DISABLE_HWLOC_AUTOMATIC_SEARCH
 )
 
+vcpkg_find_acquire_program(PKGCONFIG)
+
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
@@ -23,10 +25,17 @@ vcpkg_cmake_configure(
         -DTCM_BUILD=OFF # Disabled due to platform-specific build issues
         -DTBB_TEST=OFF
         -DTBB_STRICT=OFF
+        "-DPKG_CONFIG_EXECUTABLE=${PKGCONFIG}"
 )
 
 vcpkg_cmake_install()
 vcpkg_cmake_config_fixup(CONFIG_PATH "lib/cmake/TBB")
+if("hwloc" IN_LIST FEATURES)
+    # HWLOC is a private dependency of the shared TBBBind library.
+    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/share/tbb/TBBTargets.cmake"
+        "  INTERFACE_LINK_LIBRARIES \"PkgConfig::HWLOC\"\n" ""
+    )
+endif()
 vcpkg_copy_pdbs()
 
 if(NOT VCPKG_BUILD_TYPE)
@@ -57,4 +66,7 @@ include(CMakeFindDependencyMacro)
 find_dependency(Threads)
 ${_contents}")
 
-vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE.txt")
+vcpkg_install_copyright(FILE_LIST
+    "${SOURCE_PATH}/LICENSE.txt"
+    "${SOURCE_PATH}/third-party-programs.txt"
+)
