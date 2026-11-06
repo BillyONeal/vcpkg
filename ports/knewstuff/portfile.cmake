@@ -5,9 +5,8 @@ vcpkg_from_github(
     SHA512 e7590c315e1fb0e4f3bae3908506008cc4b4c70e02b67914abbd2b3afee7575cef211275cf8e09536be542dc30f8cf6394da57ce060e180d1975c40189657650
     HEAD_REF master
     PATCHES
-        fix-static-dependencies.patch
+        core-only.patch
         install-static-jobs-library.patch
-        optional-dialog-tool.patch
 )
 
 # Prevent KDEClangFormat from writing to source effectively blocking parallel configure
@@ -15,8 +14,6 @@ file(WRITE "${SOURCE_PATH}/.clang-format" "DisableFormat: true\nSortIncludes: fa
 
 vcpkg_check_features(
     OUT_FEATURE_OPTIONS FEATURE_OPTIONS
-    FEATURES
-        designerplugin BUILD_DESIGNERPLUGIN
     INVERTED_FEATURES
         translations   KF_SKIP_PO_PROCESSING
 )
@@ -27,17 +24,12 @@ vcpkg_cmake_configure(
         -DBUILD_TESTING=OFF
         -DCMAKE_DISABLE_FIND_PACKAGE_Qt6Tools=ON
         -DCMAKE_DISABLE_FIND_PACKAGE_Qt6ToolsTools=ON
-        -DCMAKE_DISABLE_FIND_PACKAGE_KF6Kirigami=ON
         -DCMAKE_DISABLE_FIND_PACKAGE_KF6Syndication=ON
-        -DBUILD_KNEWSTUFF_DIALOG=OFF
-        -DKDE_INSTALL_QTPLUGINDIR=Qt6/plugins
-        -DKDE_INSTALL_QMLDIR=Qt6/qml
         ${FEATURE_OPTIONS}
 )
 
 vcpkg_cmake_install()
-vcpkg_cmake_config_fixup(PACKAGE_NAME kf6newstuffcore CONFIG_PATH lib/cmake/KF6NewStuffCore DO_NOT_DELETE_PARENT_CONFIG_PATH)
-vcpkg_cmake_config_fixup(PACKAGE_NAME kf6newstuff CONFIG_PATH lib/cmake/KF6NewStuff)
+vcpkg_cmake_config_fixup(PACKAGE_NAME kf6newstuffcore CONFIG_PATH lib/cmake/KF6NewStuffCore)
 vcpkg_copy_pdbs()
 
 file(REMOVE_RECURSE
