@@ -26,7 +26,7 @@ vcpkg_cmake_configure(
         -DBUILD_EXAMPLES=OFF
         -DCMAKE_DISABLE_FIND_PACKAGE_Qt6Tools=ON
         -DCMAKE_DISABLE_FIND_PACKAGE_Qt6ToolsTools=ON
-        -DKDE_INSTALL_PLUGINDIR=plugins
+        -DKDE_INSTALL_PLUGINDIR=Qt6/plugins
         -DWITH_XSCREENSAVER=OFF
         ${FEATURE_OPTIONS}
 )
