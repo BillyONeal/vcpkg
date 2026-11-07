@@ -34,6 +34,8 @@ vcpkg_cmake_configure(
 vcpkg_cmake_install()
 vcpkg_copy_pdbs()
 vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/srpc)
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/srpc-targets.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/srpc")
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/srpc")
 
 vcpkg_copy_tools(
     TOOL_NAMES srpc_generator

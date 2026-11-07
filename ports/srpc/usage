@@ -1,0 +1,6 @@
+srpc provides a configuration-aware CMake target:
+
+    find_package(srpc CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE srpc::srpc)
+
+Prefer this target to SRPC_LIB_DIR, which names only the Release library directory.
