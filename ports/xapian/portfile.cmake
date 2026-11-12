@@ -45,11 +45,15 @@ if(VCPKG_TARGET_IS_WINDOWS)
     vcpkg_replace_string("${XAPIAN_CMAKE_CONFIG}"
         "\"\${prefix}/lib/libxapian.dll.lib\""
         "\"$<$<CONFIG:Debug>:\${prefix}/debug/lib/xapian.lib>$<$<NOT:$<CONFIG:Debug>>:\${prefix}/lib/xapian.lib>\"")
-    # On MinGW the prefix may be stored in MSYS form (/c/...); make it relocatable too.
-    file(TO_CMAKE_PATH "${CURRENT_PACKAGES_DIR}" XAPIAN_PACKAGES_DIR)
-    string(REGEX REPLACE "^([A-Za-z]):/(.*)$" "/\\1/\\2" XAPIAN_PACKAGES_DIR_MSYS "${XAPIAN_PACKAGES_DIR}")
-    vcpkg_replace_string("${XAPIAN_CMAKE_CONFIG}" "${XAPIAN_PACKAGES_DIR_MSYS}" "\${VCPKG_IMPORT_PREFIX}" IGNORE_UNCHANGED)
+    # Autotools may store the installed prefix in MSYS form (/c/...).
+    file(TO_CMAKE_PATH "${CURRENT_INSTALLED_DIR}" XAPIAN_INSTALLED_DIR)
+    string(REGEX REPLACE "^([A-Za-z]):/(.*)$" "/\\1/\\2" XAPIAN_INSTALLED_DIR_MSYS "${XAPIAN_INSTALLED_DIR}")
+    vcpkg_replace_string("${XAPIAN_CMAKE_CONFIG}" "${XAPIAN_INSTALLED_DIR_MSYS}" "\${VCPKG_IMPORT_PREFIX}" IGNORE_UNCHANGED)
     file(READ "${XAPIAN_CMAKE_CONFIG}" XAPIAN_CMAKE_CONFIG_CONTENTS)
+    string(FIND "${XAPIAN_CMAKE_CONFIG_CONTENTS}" "SET(prefix \"\${VCPKG_IMPORT_PREFIX}\")" XAPIAN_PREFIX_INDEX)
+    if(XAPIAN_PREFIX_INDEX EQUAL -1)
+        message(FATAL_ERROR "Xapian's CMake config does not use a relocatable installation prefix.")
+    endif()
     if(NOT XAPIAN_CMAKE_CONFIG_CONTENTS MATCHES "get_filename_component\\(VCPKG_IMPORT_PREFIX")
         string(PREPEND XAPIAN_CMAKE_CONFIG_CONTENTS "get_filename_component(VCPKG_IMPORT_PREFIX \"\${CMAKE_CURRENT_LIST_DIR}/../../\" ABSOLUTE)\n")
         file(WRITE "${XAPIAN_CMAKE_CONFIG}" "${XAPIAN_CMAKE_CONFIG_CONTENTS}")
