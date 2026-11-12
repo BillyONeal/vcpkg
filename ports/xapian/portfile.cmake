@@ -33,27 +33,30 @@ vcpkg_install_make()
 vcpkg_fixup_pkgconfig()
 vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/xapian)
 
-if(VCPKG_TARGET_IS_WINDOWS)
+set(XAPIAN_CMAKE_CONFIG "${CURRENT_PACKAGES_DIR}/share/xapian/xapian-config.cmake")
+set(XAPIAN_INSTALLED_PREFIX "${CURRENT_INSTALLED_DIR}")
+if(VCPKG_HOST_IS_WINDOWS)
+    # vcpkg_configure_make passes the prefix to Autotools in MSYS form (/c/...).
+    string(REGEX REPLACE "^([a-zA-Z]):/" "/\\1/" XAPIAN_INSTALLED_PREFIX "${XAPIAN_INSTALLED_PREFIX}")
+endif()
+
+if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
     # Upstream's cmake/xapian-config.cmake.in hardcodes unix-style library names
     # (libxapian.lib / libxapian.dll.lib); on Windows the library is xapian.lib
     # (the import library of bin/xapian-*.dll). Point at the real file and make
     # the selection configuration-appropriate (Debug uses debug/lib).
-    set(XAPIAN_CMAKE_CONFIG "${CURRENT_PACKAGES_DIR}/share/xapian/xapian-config.cmake")
     vcpkg_replace_string("${XAPIAN_CMAKE_CONFIG}"
         "\"\${prefix}/lib/libxapian.lib\""
         "\"$<$<CONFIG:Debug>:\${prefix}/debug/lib/xapian.lib>$<$<NOT:$<CONFIG:Debug>>:\${prefix}/lib/xapian.lib>\"")
     vcpkg_replace_string("${XAPIAN_CMAKE_CONFIG}"
         "\"\${prefix}/lib/libxapian.dll.lib\""
         "\"$<$<CONFIG:Debug>:\${prefix}/debug/lib/xapian.lib>$<$<NOT:$<CONFIG:Debug>>:\${prefix}/lib/xapian.lib>\"")
-    # Autotools may store the installed prefix in MSYS form (/c/...).
-    file(TO_CMAKE_PATH "${CURRENT_INSTALLED_DIR}" XAPIAN_INSTALLED_DIR)
-    string(REGEX REPLACE "^([A-Za-z]):/(.*)$" "/\\1/\\2" XAPIAN_INSTALLED_DIR_MSYS "${XAPIAN_INSTALLED_DIR}")
-    vcpkg_replace_string("${XAPIAN_CMAKE_CONFIG}" "${XAPIAN_INSTALLED_DIR_MSYS}" "\${VCPKG_IMPORT_PREFIX}" IGNORE_UNCHANGED)
+endif()
+
+if(VCPKG_HOST_IS_WINDOWS)
+    # vcpkg_cmake_config_fixup only relocates native paths.
+    vcpkg_replace_string("${XAPIAN_CMAKE_CONFIG}" "\"${XAPIAN_INSTALLED_PREFIX}\"" "\"\${VCPKG_IMPORT_PREFIX}\"")
     file(READ "${XAPIAN_CMAKE_CONFIG}" XAPIAN_CMAKE_CONFIG_CONTENTS)
-    string(FIND "${XAPIAN_CMAKE_CONFIG_CONTENTS}" "SET(prefix \"\${VCPKG_IMPORT_PREFIX}\")" XAPIAN_PREFIX_INDEX)
-    if(XAPIAN_PREFIX_INDEX EQUAL -1)
-        message(FATAL_ERROR "Xapian's CMake config does not use a relocatable installation prefix.")
-    endif()
     if(NOT XAPIAN_CMAKE_CONFIG_CONTENTS MATCHES "get_filename_component\\(VCPKG_IMPORT_PREFIX")
         string(PREPEND XAPIAN_CMAKE_CONFIG_CONTENTS "get_filename_component(VCPKG_IMPORT_PREFIX \"\${CMAKE_CURRENT_LIST_DIR}/../../\" ABSOLUTE)\n")
         file(WRITE "${XAPIAN_CMAKE_CONFIG}" "${XAPIAN_CMAKE_CONFIG_CONTENTS}")
@@ -61,9 +64,9 @@ if(VCPKG_TARGET_IS_WINDOWS)
 endif()
 
 if(NOT VCPKG_TARGET_IS_WINDOWS OR VCPKG_TARGET_IS_MINGW)
-    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin/xapian-config" "\"${CURRENT_INSTALLED_DIR}\"" "`dirname $0`/../../..")
+    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin/xapian-config" "\"${XAPIAN_INSTALLED_PREFIX}\"" "`dirname $0`/../../..")
     if(NOT VCPKG_BUILD_TYPE)
-        vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/tools/${PORT}/debug/bin/xapian-config" "\"${CURRENT_INSTALLED_DIR}/debug\"" "`dirname $0`/../../../../debug")
+        vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/tools/${PORT}/debug/bin/xapian-config" "\"${XAPIAN_INSTALLED_PREFIX}/debug\"" "`dirname $0`/../../../../debug")
     endif()
 endif()
 
