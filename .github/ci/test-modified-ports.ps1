@@ -13,7 +13,8 @@ The triplet to test.
 The location used as scratch space for 'installed', 'packages', and 'buildtrees' vcpkg directories.
 
 .PARAMETER ArtifactStagingDirectory
-The Azure Pipelines artifacts directory. If not supplied, defaults to the current directory.
+The directory where failure logs, hashes, and other outputs are written. If not supplied, defaults to the current
+directory.
 
 .PARAMETER ArchivesRoot
 Equivalent to '-BinarySourceStub "files,$ArchivesRoot"'
@@ -23,7 +24,7 @@ The type and parameters of the binary source. Shared across runs of this script.
 this parameter is not set, binary caching will not be used. Example: "files,W:\"
 
 .PARAMETER BuildReason
-The reason Azure Pipelines is running this script. For invocations caused by `PullRequest`,
+The reason the CI system is running this script. For invocations caused by `PullRequest`,
 modified ports are identified by changed hashes with regard to git HEAD~1 (subject to NoParentHashes),
 and ports marked as failing in the CI baseline (or which depend on such ports) are skipped.
 If BinarySourceStub is set and this parameter is set to a non-empty value other than `PullRequest`,
@@ -59,6 +60,23 @@ Param(
     [switch]$NoParentHashes = $false,
     [switch]$ForceAllowUnexpectedPassing = $false
 )
+
+function Write-CiError([string]$Message) {
+    if ($env:GITHUB_ACTIONS -eq 'true') {
+        Write-Host "::error::$Message"
+    } else {
+        Write-Host "error: $Message"
+    }
+}
+
+$failureLogsHelp = 'The ends of the failure logs are shown on the summary page of this workflow run'
+if (-Not [string]::IsNullOrEmpty($env:GITHUB_RUN_ID)) {
+    $failureLogsHelp += " ($env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID)"
+}
+
+$failureLogsHelp += '; download the "failure logs for ' + $Triplet + '" artifact from that page for the complete logs.'
+
+$scriptsRoot = Join-Path $PSScriptRoot '../../scripts'
 
 function Add-ToolchainToTestCMake {
     # The vcpkg.cmake toolchain file is not part of ABI hashing,
@@ -154,7 +172,7 @@ if ($testFeatures) {
         exit $lastLastExitCode
     }
 
-    $ciFeatureBaselineFile = "$PSScriptRoot/../ci.feature.baseline.txt"
+    $ciFeatureBaselineFile = "$scriptsRoot/ci.feature.baseline.txt"
     $ciFeatureBaselineArg = "--ci-feature-baseline=$ciFeatureBaselineFile"
     $knownFailingAbisFile = Join-Path $ArtifactStagingDirectory 'failing-abi-log.txt'
     $failingAbiLogArg = "--failing-abi-log=$knownFailingAbisFile"
@@ -162,8 +180,7 @@ if ($testFeatures) {
     $lastLastExitCode = $LASTEXITCODE
     if ($lastLastExitCode -ne 0)
     {
-        Write-Host "##vso[task.setvariable variable=FAILURE_LOGS_EMPTY]$false"
-        Write-Host "##vso[task.logissue type=error]vcpkg feature testing failed; this is usually a bug in one of the features in the port(s) edited in this pull request. See https://github.com/microsoft/vcpkg/discussions/31357 for how to access AZP failure logs."
+        Write-CiError "vcpkg feature testing failed; this is usually a bug in one of the features in the port(s) edited in this pull request. $failureLogsHelp"
         # Do not exit early: continue so that 'vcpkg ci' still runs and writes pr-hashes.json,
         # which is required for the 'Build a file list' step to succeed.
         $featureTestExitCode = $lastLastExitCode
@@ -174,9 +191,9 @@ if ($testFeatures) {
     }
 }
 
-$ciBaselineFile = "$PSScriptRoot/../ci.baseline.txt"
+$ciBaselineFile = "$scriptsRoot/ci.baseline.txt"
 $ciBaselineArg = "--ci-baseline=$ciBaselineFile"
-$toolMetadataFile = "$PSScriptRoot/../vcpkg-tool-metadata.txt"
+$toolMetadataFile = "$scriptsRoot/vcpkg-tool-metadata.txt"
 
 & $vcpkgExe x-ci-clean @commonArgs
 $lastLastExitCode = $LASTEXITCODE
@@ -245,14 +262,11 @@ if ($ForceAllowUnexpectedPassing) {
 }
 
 Add-ToolchainToTestCMake
-$xunitFile = Join-Path $ArtifactStagingDirectory "$Triplet-results.xml"
-$xunitArg = "--x-xunit=$xunitFile"
 $prHashesFile = Join-Path $ArtifactStagingDirectory "pr-hashes.json"
 & $vcpkgExe ci `
     $tripletArg `
     $failureLogsArg `
     "--output-hashes=$prHashesFile" `
-    $xunitArg `
     $ciBaselineArg `
     @commonArgs `
     @cachingArgs `
@@ -262,18 +276,16 @@ $prHashesFile = Join-Path $ArtifactStagingDirectory "pr-hashes.json"
     @allowUnexpectedPassingArgs
 $lastLastExitCode = $LASTEXITCODE
 $failureLogsEmpty = (-Not (Test-Path $failureLogs) -Or ((Get-ChildItem $failureLogs).Count -eq 0))
-Write-Host "##vso[task.setvariable variable=FAILURE_LOGS_EMPTY]$failureLogsEmpty"
-Write-Host "##vso[task.setvariable variable=XML_RESULTS_FILE]$xunitFile"
 
 if ($lastLastExitCode -ne 0)
 {
     if (-Not $failureLogsEmpty)
     {
-        Write-Host "##vso[task.logissue type=error]vcpkg ci testing failed; this is usually a bug in a port. See https://github.com/microsoft/vcpkg/discussions/31357 for how to access AZP failure logs."
+        Write-CiError "vcpkg ci testing failed; this is usually a bug in a port. $failureLogsHelp"
     }
     else
     {
-        Write-Host "##vso[task.logissue type=error]vcpkg ci testing failed, but no build failure logs were created for this error."
+        Write-CiError "vcpkg ci testing failed, but no build failure logs were created for this error."
     }
 }
 

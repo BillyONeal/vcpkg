@@ -14,8 +14,8 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 brew install autoconf-archive autoconf automake azcopy azure-cli bison cmake gettext gfortran gnu-sed gperf libtool meson nasm ninja pkg-config powershell
 mkdir "$HOME/Data"
 # NOTE: update this URI when publishing a VM update
-curl -fsSL -o "$HOME/Downloads/azure-agent.tar.gz" https://download.agent.dev.azure.com/agent/5.280.0/vsts-agent-osx-arm64-5.280.0.tar.gz
-mkdir "$HOME/myagent"
-tar xf "$HOME/Downloads/azure-agent.tar.gz" -C "$HOME/myagent"
-rm "$HOME/Downloads/azure-agent.tar.gz"
+curl -fsSL -o "$HOME/Downloads/actions-runner.tar.gz" https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-osx-arm64-2.338.2.tar.gz
+mkdir "$HOME/actions-runner"
+tar xf "$HOME/Downloads/actions-runner.tar.gz" -C "$HOME/actions-runner"
+rm "$HOME/Downloads/actions-runner.tar.gz"
 rm guest-prepare.sh

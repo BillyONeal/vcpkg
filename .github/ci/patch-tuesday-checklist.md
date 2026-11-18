@@ -9,10 +9,10 @@
       "C++ VCPKG Validation" about vulnerable software we are installing in the VMs and update that.
       (Most often PowerShell needs to be updated)
 * [ ] Check for any other software for the Windows images we wish to update and make the edits to do
-      so in `scripts/azure-pipelines/windows`
+      so in `.github/ci/windows`
 * [ ] Check for any updates possible to `vcpkg-tools.json`.
 * [ ] Run windows/create-image.ps1
 * [ ] Submit PR with those changes and merge it.
 * [ ] In the Azure portal, mark the newly created image as the 'latest' one.
-* [ ] Mint a new macOS base box.  (See instructions in `scripts/azure-pipelines/osx/README.md`)
+* [ ] Mint a new macOS base box.  (See instructions in `.github/ci/osx/README.md`)
 * [ ] Deploy the new base box to all hosts.

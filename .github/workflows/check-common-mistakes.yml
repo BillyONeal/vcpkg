@@ -5,6 +5,7 @@ permissions:
 
 on:
   pull_request:
+  workflow_call:
 
 jobs:
   Check:
@@ -20,7 +21,38 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap-vcpkg.sh
 
+      # x-add-version does not check whether dependencies, version constraints, and overrides
+      # refer to entries in the version database.
+      - name: Validate version files
+        id: validate-versions
+        # Generate Reply propagates this failure after the remaining pull request checks run.
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        run: |
+          unset VCPKG_ROOT
+          if ! ./vcpkg x-ci-verify-versions > "$RUNNER_TEMP/version-validation.log" 2>&1; then
+            # Diagnostics can contain untrusted port metadata; do not interpret it as workflow commands.
+            stop_marker=$(openssl rand -hex 16)
+            echo "::stop-commands::$stop_marker"
+            cat "$RUNNER_TEMP/version-validation.log"
+            printf '\n::%s::\n' "$stop_marker"
+            echo '::error::Version validation failed; see the job summary or this step log for details.'
+            {
+              echo '### Version validation errors'
+              echo
+              # GitHub limits each step summary to 1 MiB.
+              if [ "$(wc -c < "$RUNNER_TEMP/version-validation.log")" -gt 900000 ]; then
+                echo 'The output is too large for the summary; see the Validate version files step log.'
+              else
+                echo '```'
+                cat "$RUNNER_TEMP/version-validation.log"
+                printf '\n```\n'
+              fi
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
       - name: Formatting
+        if: github.event_name == 'pull_request'
         run: |
           git config user.email github-actions
           git config user.name github-actions@github.com
@@ -115,7 +147,10 @@ jobs:
           git reset --hard "$synthetic_merge_commit"
 
       - name: Generate Reply
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          VERSION_VALIDATION_OUTCOME: ${{ steps.validate-versions.outcome }}
         with:
           script: |
             const { promises: fs } = require('fs')
@@ -135,7 +170,7 @@ jobs:
             const trailing_whitespace_lines = parse_locations(await fs.readFile('.github-pr.trailing-whitespace-lines', 'utf8'))
 
             const summary_tab = 'Click the "Summary" tab on the left';
-            let approve = true;
+            let approve = process.env.VERSION_VALIDATION_OUTCOME === 'success';
             if (crlf_lines.length > 0 || trailing_whitespace_lines.length > 0) {
               const whitespace_files = [...new Set([...crlf_lines, ...trailing_whitespace_lines].map(({file}) => file))];
               const preexisting_whitespace = 'The whitespace may predate your change. This check reports existing problems when the affected file is edited, or when any file in the same port is edited. Some reported issues may not have been introduced by your changes, but we ask that they be fixed when the affected file or port is otherwise modified.';

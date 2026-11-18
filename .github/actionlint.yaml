@@ -1,0 +1,6 @@
+self-hosted-runner:
+  labels:
+    - 1ES.Pool=*
+    - 1ES.ImageOverride=*
+    - JobId=*
+    - vcpkg-osx-*-arm64

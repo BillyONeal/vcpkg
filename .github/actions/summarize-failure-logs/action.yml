@@ -1,0 +1,91 @@
+name: Summarize vcpkg failure logs
+description: >
+  Adds a job summary listing the ports with failure logs, including the end of each log, so that build failures can be
+  read in the browser without downloading the failure logs artifact.
+
+inputs:
+  failure-logs:
+    description: The failure logs directory passed to vcpkg with --failure-logs.
+    required: true
+  triplet:
+    description: The triplet that was tested.
+    required: true
+  artifact-url:
+    description: The URL of the uploaded failure logs artifact, if any.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Summarize failure logs
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        FAILURE_LOGS: ${{ inputs.failure-logs }}
+        TRIPLET: ${{ inputs.triplet }}
+        ARTIFACT_URL: ${{ inputs.artifact-url }}
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          const root = process.env.FAILURE_LOGS;
+          if (!fs.existsSync(root)) {
+            return;
+          }
+
+          const ports = fs.readdirSync(root, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort();
+          if (ports.length === 0) {
+            return;
+          }
+
+          // Job summaries are limited to 1 MiB per step.
+          const maxTotal = 900 * 1024;
+          const maxLines = 60;
+          const maxFileChars = 16 * 1024;
+          const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const listFiles = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+            const full = path.join(dir, e.name);
+            return e.isDirectory() ? listFiles(full) : [full];
+          });
+
+          const triplet = escape(process.env.TRIPLET);
+          let body = `## Build failures for ${triplet}\n\n`;
+          if (process.env.ARTIFACT_URL) {
+            body += `Download all failure logs: [failure logs for ${triplet}](${process.env.ARTIFACT_URL})\n\n`;
+          } else {
+            body += `Download all failure logs from the "failure logs for ${triplet}" artifact on this workflow run's summary page.\n\n`;
+          }
+
+          let truncated = false;
+          for (const port of ports) {
+            const files = listFiles(path.join(root, port)).sort();
+            let section = `<details><summary><b>${escape(port)}</b> (${files.length} files)</summary>\n\n`;
+            for (const file of files) {
+              const relative = escape(path.relative(root, file).replace(/\\/g, '/'));
+              if (!file.endsWith('.log')) {
+                section += `* ${relative}\n`;
+                continue;
+              }
+
+              let tail = fs.readFileSync(file, 'utf8').split(/\r?\n/).slice(-maxLines).join('\n');
+              if (tail.length > maxFileChars) {
+                tail = tail.slice(-maxFileChars);
+              }
+
+              section += `\n<b>${relative}</b> (last ${maxLines} lines)\n<pre>${escape(tail)}</pre>\n`;
+            }
+
+            section += '\n</details>\n\n';
+            if (Buffer.byteLength(body) + Buffer.byteLength(section) > maxTotal) {
+              truncated = true;
+              break;
+            }
+
+            body += section;
+          }
+
+          if (truncated) {
+            body += 'Some failure logs were omitted from this summary because of its size limit; download the artifact to see all of them.\n';
+          }
+
+          await core.summary.addRaw(body).write();

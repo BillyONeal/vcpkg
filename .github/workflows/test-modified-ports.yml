@@ -1,0 +1,448 @@
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
+#
+# Builds the ports modified by a pull request (or, for pushes to master, all ports) for each CI triplet.
+#
+# Build failure logs are published as the 'failure logs for <triplet>' artifact and summarized on the run's summary
+# page. Cache and registry credentials come from the mint-ci-credentials workflow so that pull requests from forks,
+# which cannot use OIDC, can use them; see that workflow for the threat model.
+#
+# Windows and Linux jobs run on 1ES GitHub runner pools, which are self-hosted runners and therefore not subject to the
+# 6 hour limit for GitHub-hosted runners. macOS jobs run on the vcpkg Mac fleet; see .github/ci/osx/README.md.
+# Do not add timeout-minutes to long steps; explicit step timeouts are limited to 6 hours.
+
+name: Test Modified Ports
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      vcpkg-tool-sha:
+        description: Custom SHA of vcpkg-tool to use rather than bootstrap
+        type: string
+        default: use default
+      x64-linux-docker-image:
+        description: Docker image to use for the x64 Linux build (empty uses the default)
+        type: string
+        default: ''
+      arm64-linux-docker-image:
+        description: Docker image to use for the arm64 Linux build (empty uses the default)
+        type: string
+        default: ''
+      triplet-pattern:
+        description: Enable triplets which contain this substring (^ matches begin, $ matches end)
+        type: string
+        default: '^'
+
+permissions:
+  contents: read
+  # Required to download the credentials published by mint-ci-credentials.yml
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  VCPKG_ASSET_CACHE_URL: https://vcpkgassetcachewus.blob.core.windows.net/cache
+  VCPKG_BINARY_CACHE_URL: https://vcpkgbinarycachewus.blob.core.windows.net/cache
+  VCPKG_CONTAINER_REGISTRY: vcpkgandroidwus.azurecr.io
+  # Keep these in sync with .github/workflows/update-containers.yml
+  X64_LINUX_DOCKER_IMAGE: vcpkgandroidwus.azurecr.io/vcpkg-linux:2026-11-02
+  ARM64_LINUX_DOCKER_IMAGE: vcpkgandroidwus.azurecr.io/vcpkg-arm64-linux:2026-10-19
+  ANDROID_DOCKER_IMAGE: vcpkgandroidwus.azurecr.io/vcpkg-android:2026-10-19
+
+jobs:
+  plan:
+    if: github.repository == 'microsoft/vcpkg'
+    runs-on: ubuntu-slim
+    outputs:
+      build-reason: ${{ steps.plan.outputs.build-reason }}
+      vcpkg-tool-sha: ${{ steps.plan.outputs.vcpkg-tool-sha }}
+      extra-checks: ${{ steps.plan.outputs.extra-checks }}
+      windows: ${{ steps.plan.outputs.windows }}
+      osx: ${{ steps.plan.outputs.osx }}
+      linux: ${{ steps.plan.outputs.linux }}
+    steps:
+      - name: Select triplets
+        id: plan
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TRIPLET_PATTERN: ${{ inputs.triplet-pattern }}
+          VCPKG_TOOL_SHA: ${{ inputs.vcpkg-tool-sha }}
+          X64_LINUX_OVERRIDE: ${{ inputs.x64-linux-docker-image }}
+          ARM64_LINUX_OVERRIDE: ${{ inputs.arm64-linux-docker-image }}
+        with:
+          script: |
+            const pattern = process.env.TRIPLET_PATTERN || '^';
+            const enabled = (entry) => `^${entry.triplet}$`.includes(pattern);
+            const x64Linux = process.env.X64_LINUX_OVERRIDE || process.env.X64_LINUX_DOCKER_IMAGE;
+            const arm64Linux = process.env.ARM64_LINUX_OVERRIDE || process.env.ARM64_LINUX_DOCKER_IMAGE;
+            const android = process.env.ANDROID_DOCKER_IMAGE;
+            const windows = [
+              'x86-windows',
+              'x64-windows',
+              'x64-windows-release',
+              'x64-windows-static',
+              'x64-windows-static-md',
+              'arm64-windows',
+              'arm64-windows-static-md',
+            ].map((triplet) => ({ triplet }));
+            const osx = [{ triplet: 'arm64-osx' }];
+            // 'image' runs the build; 'bootstrap-image' builds a custom vcpkg-tool.
+            // arm64-linux cross compiles on x64 hosts.
+            const linux = [
+              { triplet: 'x64-linux', image: x64Linux, 'bootstrap-image': x64Linux },
+              { triplet: 'arm64-linux', image: arm64Linux, 'bootstrap-image': arm64Linux },
+              { triplet: 'arm-neon-android', image: android, 'bootstrap-image': x64Linux },
+              { triplet: 'x64-android', image: android, 'bootstrap-image': x64Linux },
+              { triplet: 'arm64-android', image: android, 'bootstrap-image': x64Linux },
+            ];
+
+            // test-modified-ports.ps1 only treats 'PullRequest' specially; any other value selects write-only
+            // binary caching.
+            const buildReason = { pull_request: 'PullRequest', push: 'CI', workflow_dispatch: 'Manual' }[context.eventName];
+            const selectedWindows = windows.filter(enabled);
+            core.setOutput('build-reason', buildReason);
+            core.setOutput('vcpkg-tool-sha', process.env.VCPKG_TOOL_SHA || 'use default');
+            core.setOutput('extra-checks', selectedWindows.some((entry) => entry.triplet === 'x86-windows'));
+            core.setOutput('windows', JSON.stringify(selectedWindows));
+            core.setOutput('osx', JSON.stringify(osx.filter(enabled)));
+            core.setOutput('linux', JSON.stringify(linux.filter(enabled)));
+
+  # Pull requests run this check separately; preserve it for other runs selecting the x86 extra checks.
+  validate-versions:
+    needs: plan
+    if: github.event_name != 'pull_request' && needs.plan.outputs.extra-checks == 'true'
+    uses: ./.github/workflows/check-common-mistakes.yml
+
+  windows:
+    needs: plan
+    if: needs.plan.outputs.windows != '[]'
+    name: ${{ matrix.triplet }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.windows) }}
+    # 1ES.ImageOverride plays the role of the old ImageVersionOverride demand so that a pull request can move to a new
+    # image; update it when publishing a new image with .github/ci/windows/create-image.ps1.
+    runs-on:
+      - self-hosted
+      - 1ES.Pool=vcpkg-pr-windows
+      - 1ES.ImageOverride=vcpkg-windows-2026-10-27
+      - JobId=vcpkg-windows-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}-${{ strategy.job-index }}
+    timeout-minutes: 2880 # 2 days
+    env:
+      BUILD_REASON: ${{ needs.plan.outputs.build-reason }}
+      VCPKG_TOOL_SHA: ${{ needs.plan.outputs.vcpkg-tool-sha }}
+      TRIPLET: ${{ matrix.triplet }}
+      WORKING_ROOT: D:\
+      VCPKG_DOWNLOADS: D:\downloads
+      ARTIFACT_STAGING: ${{ github.workspace }}\..\artifacts
+      EXTRA_CHECKS: ${{ matrix.triplet == 'x86-windows' }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # test-modified-ports.ps1 needs origin/master and the synthetic merge commit's parents.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Get credentials
+        uses: ./.github/actions/get-ci-credentials
+
+      - name: Bootstrap vcpkg
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DOWNLOADS, $env:ARTIFACT_STAGING | Out-Null
+          if ($env:VCPKG_TOOL_SHA -eq 'use default') {
+            & .\bootstrap-vcpkg.bat
+          } else {
+            & .\.github\ci\windows\bootstrap-from-source.cmd $env:VCPKG_TOOL_SHA
+          }
+
+      - name: Format manifests and baselines
+        if: ${{ !cancelled() && env.EXTRA_CHECKS == 'true' }}
+        run: |
+          .\vcpkg.exe format-manifest --all
+          .\vcpkg.exe format-feature-baseline scripts\ci.baseline.txt
+          .\vcpkg.exe format-feature-baseline scripts\ci.feature.baseline.txt
+
+      - name: Create format diff
+        if: ${{ !cancelled() && env.EXTRA_CHECKS == 'true' }}
+        run: .\.github\ci\create-pr-diff.ps1 -DiffFile "$env:ARTIFACT_STAGING\format.diff"
+
+      - name: Publish format diff
+        if: ${{ failure() && env.EXTRA_CHECKS == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: format.diff
+          path: ${{ env.ARTIFACT_STAGING }}\format.diff
+          if-no-files-found: ignore
+
+      - name: '*** Test Modified Ports'
+        run: |
+          $env:X_VCPKG_ASSET_SOURCES = "x-azurl,$env:VCPKG_ASSET_CACHE_URL,$env:VCPKG_CI_ASSET_SAS,readwrite"
+          & .github/ci/test-modified-ports.ps1 -Triplet $env:TRIPLET -BuildReason $env:BUILD_REASON -BinarySourceStub "x-azcopy-sas,$env:VCPKG_BINARY_CACHE_URL,$env:VCPKG_CI_BINARY_SAS" -WorkingRoot $env:WORKING_ROOT -ArtifactStagingDirectory $env:ARTIFACT_STAGING
+
+      - name: Publish failure logs
+        id: failure-logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: failure logs for ${{ matrix.triplet }}
+          path: ${{ env.ARTIFACT_STAGING }}\failure-logs
+          if-no-files-found: ignore
+
+      - name: Summarize failure logs
+        if: always()
+        uses: ./.github/actions/summarize-failure-logs
+        with:
+          failure-logs: ${{ env.ARTIFACT_STAGING }}\failure-logs
+          triplet: ${{ matrix.triplet }}
+          artifact-url: ${{ steps.failure-logs.outputs.artifact-url }}
+
+      - name: Build a file list for all packages
+        if: always()
+        run: |
+          $outDir = Join-Path $env:ARTIFACT_STAGING 'list-files'
+          if ($env:BUILD_REASON -eq 'PullRequest') {
+            & .github/ci/build-file-lists.ps1 -OutDir $outDir -PrHashes "$env:ARTIFACT_STAGING\pr-hashes.json" -BinaryCacheUrl $env:VCPKG_BINARY_CACHE_URL -BinaryCacheSas $env:VCPKG_CI_BINARY_SAS
+          } else {
+            & .github/ci/build-file-lists.ps1 -OutDir $outDir -InfoDir "$env:WORKING_ROOT\installed\vcpkg\info"
+          }
+
+      - name: Publish file lists
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: file lists for ${{ matrix.triplet }}
+          path: ${{ env.ARTIFACT_STAGING }}\list-files
+
+  osx:
+    needs: plan
+    if: needs.plan.outputs.osx != '[]'
+    name: ${{ matrix.triplet }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.osx) }}
+    # The last label is the guest image name; see .github/ci/osx/README.md.
+    runs-on: [self-hosted, macOS, ARM64, vcpkg-osx-2026-10-19-arm64]
+    timeout-minutes: 2880 # 2 days
+    env:
+      BUILD_REASON: ${{ needs.plan.outputs.build-reason }}
+      VCPKG_TOOL_SHA: ${{ needs.plan.outputs.vcpkg-tool-sha }}
+      TRIPLET: ${{ matrix.triplet }}
+      ARTIFACT_STAGING: ${{ github.workspace }}/../artifacts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Get credentials
+        uses: ./.github/actions/get-ci-credentials
+
+      - name: Bootstrap vcpkg
+        shell: bash
+        run: |
+          sudo mkdir -p ~/Data/downloads || true
+          sudo chmod 777 ~/Data/downloads || true
+          rm -rf "$ARTIFACT_STAGING"
+          mkdir -p "$ARTIFACT_STAGING"
+          if [ "$VCPKG_TOOL_SHA" = "use default" ]; then
+            ./bootstrap-vcpkg.sh
+          else
+            ./.github/ci/bootstrap-from-source.sh "$VCPKG_TOOL_SHA"
+          fi
+
+      - name: '*** Test Modified Ports'
+        shell: pwsh
+        run: |
+          $env:X_VCPKG_ASSET_SOURCES = "x-azurl,$env:VCPKG_ASSET_CACHE_URL,$env:VCPKG_CI_ASSET_SAS,readwrite"
+          & .github/ci/test-modified-ports.ps1 -Triplet $env:TRIPLET -BuildReason $env:BUILD_REASON -BinarySourceStub "x-azcopy-sas,$env:VCPKG_BINARY_CACHE_URL,$env:VCPKG_CI_BINARY_SAS" -WorkingRoot "$HOME/Data" -ArtifactStagingDirectory $env:ARTIFACT_STAGING
+
+      - name: Publish failure logs
+        id: failure-logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: failure logs for ${{ matrix.triplet }}
+          path: ${{ env.ARTIFACT_STAGING }}/failure-logs
+          if-no-files-found: ignore
+
+      - name: Summarize failure logs
+        if: always()
+        uses: ./.github/actions/summarize-failure-logs
+        with:
+          failure-logs: ${{ env.ARTIFACT_STAGING }}/failure-logs
+          triplet: ${{ matrix.triplet }}
+          artifact-url: ${{ steps.failure-logs.outputs.artifact-url }}
+
+      - name: Build a file list for all packages
+        if: always()
+        shell: pwsh
+        run: |
+          $outDir = Join-Path $env:ARTIFACT_STAGING 'list-files'
+          if ($env:BUILD_REASON -eq 'PullRequest') {
+            & .github/ci/build-file-lists.ps1 -OutDir $outDir -PrHashes "$env:ARTIFACT_STAGING/pr-hashes.json" -BinaryCacheUrl $env:VCPKG_BINARY_CACHE_URL -BinaryCacheSas $env:VCPKG_CI_BINARY_SAS
+          } else {
+            & .github/ci/build-file-lists.ps1 -OutDir $outDir -InfoDir "$HOME/Data/installed/vcpkg/info"
+          }
+
+      - name: Publish file lists
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: file lists for ${{ matrix.triplet }}
+          path: ${{ env.ARTIFACT_STAGING }}/list-files
+
+  linux:
+    needs: plan
+    if: needs.plan.outputs.linux != '[]'
+    name: ${{ matrix.triplet }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.linux) }}
+    runs-on:
+      - self-hosted
+      - 1ES.Pool=vcpkg-pr-linux
+      - JobId=vcpkg-linux-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}-${{ strategy.job-index }}
+    timeout-minutes: 1440 # 1 day
+    env:
+      BUILD_REASON: ${{ needs.plan.outputs.build-reason }}
+      VCPKG_TOOL_SHA: ${{ needs.plan.outputs.vcpkg-tool-sha }}
+      TRIPLET: ${{ matrix.triplet }}
+      DOCKER_IMAGE: ${{ matrix.image }}
+      BOOTSTRAP_DOCKER_IMAGE: ${{ matrix.bootstrap-image }}
+      # /mnt is the Azure machines' temporary disk.
+      WORKING_ROOT: /mnt/vcpkg-ci
+      VCPKG_DOWNLOADS: /mnt/vcpkg-ci/downloads
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Get credentials
+        uses: ./.github/actions/get-ci-credentials
+
+      - name: Create working directories
+        run: |
+          sudo mkdir -p "$WORKING_ROOT" -m=777
+          sudo rm -rf "$WORKING_ROOT/failure-logs" "$WORKING_ROOT/list-files"
+          sudo mkdir "$WORKING_ROOT/failure-logs" -m=777
+          sudo mkdir "$WORKING_ROOT/list-files" -m=777
+          sudo mkdir -p "$VCPKG_DOWNLOADS" -m=777
+          # Move the docker layers to the temp disk.
+          sudo mkdir -p /etc/docker
+          echo '{"data-root": "/mnt/docker"}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+      - name: Pull Docker images
+        run: |
+          # The registry token is short lived, so pull everything this job needs now.
+          DOCKER_CONFIG="$RUNNER_TEMP/docker-config"
+          export DOCKER_CONFIG
+          printf '%s' "$VCPKG_CI_ACR_TOKEN" | docker login "$VCPKG_CONTAINER_REGISTRY" --username 00000000-0000-0000-0000-000000000000 --password-stdin
+          docker pull "$DOCKER_IMAGE"
+          if [ "$VCPKG_TOOL_SHA" != "use default" ]; then
+            docker pull "$BOOTSTRAP_DOCKER_IMAGE"
+          fi
+          docker logout "$VCPKG_CONTAINER_REGISTRY"
+          rm -rf "$DOCKER_CONFIG"
+
+      - name: Bootstrap vcpkg
+        run: |
+          if [ "$VCPKG_TOOL_SHA" = "use default" ]; then
+            ./bootstrap-vcpkg.sh -skipDependencyChecks
+          else
+            docker run --init -i --rm \
+            -a stderr \
+            -a stdout \
+            --user "$(id --user)" \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/vcpkg" \
+            --workdir /vcpkg \
+            "$BOOTSTRAP_DOCKER_IMAGE" \
+            /vcpkg/.github/ci/bootstrap-from-source.sh "$VCPKG_TOOL_SHA"
+          fi
+
+      - name: '*** Test Modified Ports'
+        # Be very very careful that the exit code from pwsh is reported correctly
+        run: |
+          docker run --init -i --rm \
+          -a stderr \
+          -a stdout \
+          --user "$(id --user)" \
+          --mount "type=bind,source=$GITHUB_WORKSPACE,target=/vcpkg" \
+          --mount "type=bind,source=$WORKING_ROOT/failure-logs,target=/vcpkg/failure-logs" \
+          --mount "type=bind,source=$WORKING_ROOT,target=$WORKING_ROOT" \
+          --env "X_VCPKG_ASSET_SOURCES=x-azurl,$VCPKG_ASSET_CACHE_URL,$VCPKG_CI_ASSET_SAS,readwrite" \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_SERVER_URL \
+          --env GITHUB_REPOSITORY \
+          --env GITHUB_RUN_ID \
+          --workdir /vcpkg \
+          "$DOCKER_IMAGE" \
+          pwsh \
+           -File .github/ci/test-modified-ports.ps1 \
+           -Triplet "$TRIPLET" \
+           -BuildReason "$BUILD_REASON" \
+           -BinarySourceStub "x-azcopy-sas,$VCPKG_BINARY_CACHE_URL,$VCPKG_CI_BINARY_SAS" \
+           -WorkingRoot "$WORKING_ROOT"
+
+      - name: Publish failure logs
+        id: failure-logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: failure logs for ${{ matrix.triplet }}
+          path: ${{ env.WORKING_ROOT }}/failure-logs
+          if-no-files-found: ignore
+
+      - name: Summarize failure logs
+        if: always()
+        uses: ./.github/actions/summarize-failure-logs
+        with:
+          failure-logs: ${{ env.WORKING_ROOT }}/failure-logs
+          triplet: ${{ matrix.triplet }}
+          artifact-url: ${{ steps.failure-logs.outputs.artifact-url }}
+
+      - name: Build a file list for all packages
+        if: always()
+        run: |
+          if [ "$BUILD_REASON" = "PullRequest" ]; then
+            modeArgs=(-PrHashes /vcpkg/pr-hashes.json -BinaryCacheUrl "$VCPKG_BINARY_CACHE_URL" -BinaryCacheSas "$VCPKG_CI_BINARY_SAS")
+          else
+            modeArgs=(-InfoDir "$WORKING_ROOT/installed/vcpkg/info")
+          fi
+          docker run --init -i --rm \
+          -a stderr \
+          -a stdout \
+          --user "$(id --user)" \
+          --mount "type=bind,source=$GITHUB_WORKSPACE,target=/vcpkg" \
+          --mount "type=bind,source=$WORKING_ROOT,target=$WORKING_ROOT" \
+          --workdir /vcpkg \
+          "$DOCKER_IMAGE" \
+          pwsh -File .github/ci/build-file-lists.ps1 -OutDir "$WORKING_ROOT/list-files" "${modeArgs[@]}"
+
+      - name: Publish file lists
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: file lists for ${{ matrix.triplet }}
+          path: ${{ env.WORKING_ROOT }}/list-files

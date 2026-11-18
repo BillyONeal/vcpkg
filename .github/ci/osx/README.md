@@ -5,10 +5,10 @@ through the KVM. Use the KVM software's "paste from clipboard" function to trans
 short-lived credentials to the host. SSH commands in this document connect from the host to its
 guest VM, not from a developer workstation to the host.
 
-Before publishing the VM update changes, update the Azure Agent URI in
-`scripts/azure-pipelines/osx/guest-prepare.sh` to the current version. You can find this by going to the
-agent pool, selecting "New agent", picking macOS, and copying the link. For example:
-https://download.agent.dev.azure.com/agent/5.280.0/vsts-agent-osx-arm64-5.280.0.tar.gz
+Before publishing the VM update changes, update the GitHub Actions runner URI in
+`.github/ci/osx/guest-prepare.sh` to the current version from https://github.com/actions/runner/releases .
+For example:
+https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-osx-arm64-2.338.2.tar.gz
 
 Install and enable Homebrew on each host before cloning vcpkg:
 
@@ -44,13 +44,13 @@ have already been merged into `microsoft/vcpkg`. If the working branch is update
 
 ### Instructions (ARM64)
 
-- [ ] Go to https://dev.azure.com/vcpkg/public/_settings/agentqueues , pick the current osx queue,
-      and delete one of the agents that are idle.
+- [ ] Go to https://github.com/microsoft/vcpkg/settings/actions/runners , pick an idle runner with
+      the current `vcpkg-osx-*-arm64` label, and remove it.
 - [ ] Go to that machine in the KVM. (Passwords are stored as secrets in the CPP_GITHUB\vcpkg\vcpkgmm-passwords key vault)
 - [ ] Update the macos host
 - [ ] Prepare the host. This enables Homebrew, installs AzCopy if needed, and installs `macosvm` to `~`:
     ```sh
-    ~/vcpkg/scripts/azure-pipelines/osx/host-prepare.sh
+    ~/vcpkg/.github/ci/osx/host-prepare.sh
     ```
 - [ ] On a workstation, generate download commands with short-lived, blob-scoped credentials for
     the matching IPSW, Xcode archive, and Command Line Tools installer in the `assets` container:
@@ -106,14 +106,14 @@ have already been merged into `microsoft/vcpkg`. If the working branch is update
 - [ ] Install Xcode from the host's vcpkg clone. This prompts for the guest password to install an
     SSH key and enable passwordless sudo, then transfers and expands Xcode:
     ```sh
-    cd ~/vcpkg/scripts/azure-pipelines/osx
+    cd ~/vcpkg/.github/ci/osx
     ./host-install-xcode.sh
     ```
 - [ ] Open Xcode from Applications in the guest GUI. Uncheck "ios", external agent access "Always"
 - [ ] After completing the Xcode GUI step, run the guest preparation script. It installs the Command
-    Line Tools, build dependencies, and the Azure Pipelines agent:
+    Line Tools, build dependencies, and the GitHub Actions runner:
     ```sh
-    cd ~/vcpkg/scripts/azure-pipelines/osx
+    cd ~/vcpkg/.github/ci/osx
     ./host-prepare-guest.sh
     ```
 - [ ] Shut down the VM cleanly.
@@ -144,7 +144,9 @@ have already been merged into `microsoft/vcpkg`. If the working branch is update
     Get-AzCopyWriteCommand -FileName vcpkg-osx-YYYY-MM-DD-arm64.aar
     ```
 - [ ] Paste and run the generated AzCopy command in the host's KVM terminal.
-- [ ] Go to https://dev.azure.com/vcpkg/public/_settings/agentqueues and create a new self hosted Agent pool named `PrOsx-YYYY-MM-DD-arm64`. Grant microsoft.vcpkg.ci and microsoft.vcpkg.pr access.
+- [ ] Update the `vcpkg-osx-YYYY-MM-DD-arm64` label in `runs-on` for the osx job in
+      `.github/workflows/test-modified-ports.yml`. Runners register with their VM directory name as
+      a label, so jobs move to the new image when that change is merged.
 - [ ] Follow the "Deploying images" steps below for each machine in the fleet.
 
 ## Deploying images
@@ -153,7 +155,7 @@ have already been merged into `microsoft/vcpkg`. If the working branch is update
 
 Run these steps on each machine to add to the fleet. Skip steps that were done implicitly above if this machine was used to build a box.
 
-- [ ] If this machine was used before, delete it from the pool of which it is a member from https://dev.azure.com/vcpkg/public/_settings/agentqueues
+- [ ] If this machine was used before, remove its runner from https://github.com/microsoft/vcpkg/settings/actions/runners
 - [ ] Log in to the machine using the KVM.
 - [ ] Check for software updates in macOS system settings
 - [ ] Ensure the host's vcpkg clone is at the published working revision, then prepare the host. This
@@ -161,7 +163,7 @@ Run these steps on each machine to add to the fleet. Skip steps that were done i
     ```sh
     git -C ~/vcpkg fetch <WORKING-REMOTE> <WORKING-BRANCH>
     git -C ~/vcpkg checkout --detach FETCH_HEAD
-    ~/vcpkg/scripts/azure-pipelines/osx/host-prepare.sh
+    ~/vcpkg/.github/ci/osx/host-prepare.sh
     ```
 - [ ] Skip if this is the image building machine. In PowerShell on a workstation, mint a SAS token
     and generate the AzCopy command with:
@@ -190,18 +192,18 @@ Run these steps on each machine to add to the fleet. Skip steps that were done i
     cd ~/vcpkg-osx-YYYY-MM-DD-arm64
     ~/macosvm ./vm.json
     ```
-- [ ] In PowerShell on a workstation, generate a short-lived access token to add the agent to the
-    pool:
+- [ ] On a workstation, generate a runner registration token, which is valid for one hour. This
+    requires administrator access to the repository:
     ```pwsh
-    az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv
+    gh api -X POST repos/microsoft/vcpkg/actions/runners/registration-token --jq .token
     ```
 - [ ] In the host's KVM terminal, use the KVM software's "paste from clipboard" function to paste
-    the short-lived access token into the guest deploy command from the vcpkg clone. The script
-    accepts a host name in the form `vcpkg-m4-NNN` case-insensitively, registers the Azure DevOps
-    agent as `VCPKG-M4-NNN`, and stops with an error if the host name or agent pool cannot be
-    determined unambiguously:
+    the registration token into the guest deploy command from the vcpkg clone. The script accepts a
+    host name in the form `vcpkg-m4-NNN` case-insensitively, registers the GitHub Actions runner as
+    `VCPKG-M4-NNN` with the `vcpkg-osx-YYYY-MM-DD-arm64` label, and stops with an error if the host
+    name or image label cannot be determined unambiguously:
     ```sh
-    ~/vcpkg/scripts/azure-pipelines/osx/host-register-guest.sh TOKEN-GOES-HERE
+    ~/vcpkg/.github/ci/osx/host-register-guest.sh TOKEN-GOES-HERE
     ```
 - [ ] After successful registration, the script will cleanly shut down the VM. If registration fails,
       the VM remains running for diagnosis. In the KVM's terminal, relaunch the successfully registered
@@ -209,11 +211,12 @@ Run these steps on each machine to add to the fleet. Skip steps that were done i
     ```sh
     ~/macosvm --ephemeral ./vm.json
     ```
-- [ ] Open a terminal window on the host and run the agent
+- [ ] Open a terminal window on the host and run the runner
     ```sh
     ssh -i ~/vcpkg-osx-*-arm64/id_guest builduser@buildusers-Virtual-Machine.local
-    ~/myagent/run.sh
+    ~/actions-runner/run.sh
     ```
-- [ ] Check that the machine shows up in the pool, and lock the current user account on the host.
+- [ ] Check that the machine shows up as idle at https://github.com/microsoft/vcpkg/settings/actions/runners ,
+      and lock the current user account on the host.
 - [ ] Lock the screen on the host.
-- [ ] Update the "vcpkg Macs" spreadsheet line for the machine with the new pool.
+- [ ] Update the "vcpkg Macs" spreadsheet line for the machine with the new image.

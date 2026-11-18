@@ -2,7 +2,7 @@
 set -e
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <token>" >&2
+    echo "Usage: $0 <runner registration token>" >&2
     exit 1
 fi
 
@@ -20,13 +20,14 @@ case "$HOST_NAME" in
         ;;
 esac
 
-export AGENT=$HOST_NAME
-echo "THIS IS AGENT: $AGENT"
-export POOL=`echo "$HOME"/vcpkg-osx-*-arm64/ | sed -En 's/.+\/vcpkg-osx-([0-9]{4}-[0-9]{2}-[0-9]{2})-arm64\/$/PrOsx-\1-arm64/p'`
-case "$POOL" in
-    PrOsx-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-arm64) ;;
+export RUNNER=$HOST_NAME
+echo "THIS IS RUNNER: $RUNNER"
+# The image label is used in runs-on in .github/workflows/test-modified-ports.yml
+export LABEL=`echo "$HOME"/vcpkg-osx-*-arm64/ | sed -En 's/.+\/(vcpkg-osx-[0-9]{4}-[0-9]{2}-[0-9]{2}-arm64)\/$/\1/p'`
+case "$LABEL" in
+    vcpkg-osx-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-arm64) ;;
     *)
-        echo "Failed to determine exactly one agent pool from ~/vcpkg-osx-*-arm64" >&2
+        echo "Failed to determine exactly one image label from ~/vcpkg-osx-*-arm64" >&2
         exit 1
         ;;
 esac
@@ -35,7 +36,7 @@ export SSH_COOKIE=builduser@buildusers-Virtual-Machine.local
 mkdir -p "$HOME/.ssh"
 touch "$HOME/.ssh/known_hosts"
 ssh-keygen -R buildusers-Virtual-Machine.local -f "$HOME/.ssh/known_hosts"
-echo "POOL: $POOL"
+echo "LABEL: $LABEL"
 echo "SSH_COOKIE: $SSH_COOKIE"
-ssh -o "StrictHostKeyChecking=no" -i "$HOME"/vcpkg-osx-*-arm64/id_guest "$SSH_COOKIE" "\$HOME/myagent/config.sh --unattended --url https://dev.azure.com/vcpkg --work \$HOME/Data/work --auth pat --token $1 --pool $POOL --agent $AGENT --replace --acceptTeeEula"
+ssh -o "StrictHostKeyChecking=no" -i "$HOME"/vcpkg-osx-*-arm64/id_guest "$SSH_COOKIE" "\$HOME/actions-runner/config.sh --unattended --url https://github.com/microsoft/vcpkg --token $1 --name $RUNNER --labels $LABEL --work \$HOME/Data/work --replace"
 ssh -o "StrictHostKeyChecking=no" -i "$HOME"/vcpkg-osx-*-arm64/id_guest "$SSH_COOKIE" "sudo shutdown -h now"
