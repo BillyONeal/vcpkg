@@ -19,10 +19,4 @@ file(
     DESTINATION "${CURRENT_PACKAGES_DIR}/share/opengl"
 )
 
-vcpkg_download_distfile(APACHE_LICENSE
-    URLS "https://apache.org/licenses/LICENSE-2.0.txt"
-    FILENAME 98f6b79b778f7b0a1541.txt
-    SHA512 98f6b79b778f7b0a15415bd750c3a8a097d650511cb4ec8115188e115c47053fe700f578895c097051c9bc3dfb6197c2b13a15de203273e1a3218884f86e90e8
-)
-
-vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/api/KHR/khrplatform.h" "${APACHE_LICENSE}")
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/api/KHR/khrplatform.h" "${SOURCE_PATH}/api/EGL/egl.h")
