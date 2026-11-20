@@ -6,6 +6,8 @@ vcpkg_from_github(
     REF "v${VERSION}"
     SHA512 a8127d3696057409bcc7c397a3edf2f28bfb37aad34ba48b873fe6e5bc93d0d933e3e723da3e8a785b1eb1e4e4357a9eac031f0dda5665709a77bbeac1189006
     HEAD_REF main
+    PATCHES
+        vcpkg-sodium-target.patch
 )
 
 vcpkg_cmake_configure(

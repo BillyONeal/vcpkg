@@ -1,0 +1,46 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bea019a..118b5de 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -201,6 +201,8 @@ if(YOJIMBO_SYSTEM_DEPS)
+ 
+     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/YojimboSystemDeps.cmake")
+     yojimbo_find_system_deps("${CMAKE_CURRENT_SOURCE_DIR}/dependencies.manifest")
++    find_package(netcode CONFIG REQUIRED)
++    find_package(serialize CONFIG REQUIRED)
+ 
+     set(YOJIMBO_INCLUDE_DIRS
+         "${CMAKE_CURRENT_SOURCE_DIR}"
+@@ -318,7 +320,7 @@ set_target_properties(yojimbo PROPERTIES
+     SOVERSION ${PROJECT_VERSION_MAJOR})
+ 
+ if(YOJIMBO_SYSTEM_DEPS)
+-    target_link_libraries(yojimbo PUBLIC Yojimbo::netcode Yojimbo::reliable Yojimbo::serialize)
++    target_link_libraries(yojimbo PUBLIC netcode::netcode "${YOJIMBO_RELIABLE_LIBRARY}" serialize::serialize)
+ elseif(YOJIMBO_SYSTEM_SODIUM)
+     target_link_libraries(yojimbo PUBLIC Yojimbo::sodium)
+ endif()
+@@ -326,7 +328,7 @@ if(NOT WIN32)
+     target_link_libraries(yojimbo PUBLIC m)   # ceil/floor in the reliable-ordered channel etc.
+ endif()
+ if(YOJIMBO_SYSTEM_TLSF)
+-    target_link_libraries(yojimbo PUBLIC Yojimbo::tlsf)
++    target_link_libraries(yojimbo PUBLIC "${YOJIMBO_TLSF_LIBRARY}")
+ endif()
+ 
+ # --- install ------------------------------------------------------------------------------
+diff --git a/cmake/YojimboConfig.cmake.in b/cmake/YojimboConfig.cmake.in
+index 4dd3d75..657605c 100644
+--- a/cmake/YojimboConfig.cmake.in
++++ b/cmake/YojimboConfig.cmake.in
+@@ -19,6 +19,10 @@ set(YOJIMBO_SYSTEM_DEPS @YOJIMBO_SYSTEM_DEPS@)
+ set(YOJIMBO_SYSTEM_SODIUM @YOJIMBO_SYSTEM_SODIUM@)
+ set(YOJIMBO_SYSTEM_TLSF @YOJIMBO_SYSTEM_TLSF@)
+ 
++include(CMakeFindDependencyMacro)
++find_dependency(netcode CONFIG)
++find_dependency(serialize CONFIG)
++
+ if(YOJIMBO_SYSTEM_DEPS)
+     include("${CMAKE_CURRENT_LIST_DIR}/YojimboSystemDeps.cmake")
+     yojimbo_find_system_deps("${CMAKE_CURRENT_LIST_DIR}/dependencies.manifest")

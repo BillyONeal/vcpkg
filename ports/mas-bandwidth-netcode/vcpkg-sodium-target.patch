@@ -1,0 +1,42 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0fca153..04831a1 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -104,12 +104,10 @@ if(NETCODE_SYSTEM_SODIUM)
+     # interchangeable. package managers prefer this so their libsodium supplies the
+     # crypto and receives security updates.
+ 
+-    find_path(NETCODE_SODIUM_INCLUDE_DIR sodium.h REQUIRED)
+-    find_library(NETCODE_SODIUM_LIBRARY sodium REQUIRED)
++    find_package(unofficial-sodium CONFIG REQUIRED)
+ 
+     add_library(sodium INTERFACE)
+-    target_include_directories(sodium INTERFACE ${NETCODE_SODIUM_INCLUDE_DIR})
+-    target_link_libraries(sodium INTERFACE ${NETCODE_SODIUM_LIBRARY})
++    target_link_libraries(sodium INTERFACE unofficial-sodium::sodium)
+ 
+ else()
+ 
+@@ -145,8 +143,7 @@ endif()
+ 
+ if(NETCODE_SYSTEM_SODIUM)
+     add_library(netcode netcode.c netcode.h)
+-    target_include_directories(netcode PRIVATE ${NETCODE_SODIUM_INCLUDE_DIR})
+-    target_link_libraries(netcode PUBLIC ${NETCODE_SODIUM_LIBRARY})
++    target_link_libraries(netcode PUBLIC unofficial-sodium::sodium)
+ else()
+     add_library(netcode netcode.c netcode.h $<TARGET_OBJECTS:sodium>)
+     target_include_directories(netcode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/sodium)
+diff --git a/cmake/netcodeConfig.cmake.in b/cmake/netcodeConfig.cmake.in
+index 456a99c..e0ac918 100644
+--- a/cmake/netcodeConfig.cmake.in
++++ b/cmake/netcodeConfig.cmake.in
+@@ -1,5 +1,8 @@
+ @PACKAGE_INIT@
+ 
++include(CMakeFindDependencyMacro)
++find_dependency(unofficial-sodium CONFIG)
++
+ include("${CMAKE_CURRENT_LIST_DIR}/netcodeTargets.cmake")
+ 
+ check_required_components(netcode)
