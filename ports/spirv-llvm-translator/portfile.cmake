@@ -6,6 +6,8 @@ vcpkg_from_github(
     REF "v${VERSION}"
     SHA512 fff2224f63926819e29d5f2daa54015b486497f131ecf4b563cfde75a594812a5c395b67971022be13de42d7429db1fc747c725c15978894baa3a62013d98777
     HEAD_REF main
+    PATCHES
+        disable-unused-spirv-tools.patch
 )
 
 vcpkg_cmake_configure(
@@ -14,8 +16,8 @@ vcpkg_cmake_configure(
         -DLLVM_SPIRV_BUILD_EXTERNAL=ON
         -DLLVM_SPIRV_INCLUDE_TESTS=OFF
         -DLLVM_SPIRV_ENABLE_LIBSPIRV_DIS=OFF
-        -DLLVM_SPIRV_ENABLE_LIBSPIRV_VAL=OFF
         "-DLLVM_EXTERNAL_SPIRV_HEADERS_SOURCE_DIR=${CURRENT_INSTALLED_DIR}"
+        "-DCMAKE_PROJECT_LLVM_SPIRV_INCLUDE=${CMAKE_CURRENT_LIST_DIR}/pkgconfig-dependencies.cmake"
         -DCCACHE_ALLOWED=OFF
 )
 vcpkg_cmake_install()
