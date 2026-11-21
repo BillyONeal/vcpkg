@@ -1,0 +1,67 @@
+diff --git a/SDK/simData/CMakeLists.txt b/SDK/simData/CMakeLists.txt
+index eeaa33b..d484bc9 100644
+--- a/SDK/simData/CMakeLists.txt
++++ b/SDK/simData/CMakeLists.txt
+@@ -129,6 +129,7 @@ ApplySDKVersion(simData)
+ target_include_directories(simData PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
++    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+     $<INSTALL_INTERFACE:include>
+ )
+ 
+@@ -144,6 +145,7 @@ if(EnTT_FOUND)
+     target_link_libraries(simData PUBLIC EnTT::EnTT)
+     set(SIMDATA_HAVE_ENTT ON)
+ endif()
++configure_file(EnTTConfig.h.in include/simData/EnTTConfig.h @ONLY)
+ 
+ if(WIN32)
+     target_compile_options(simData PRIVATE -bigobj)
+@@ -183,6 +185,7 @@ if(INSTALL_HEADERS)
+     install(
+         FILES
+             ${DATA_GENERATED_HEADERS}
++            "${CMAKE_CURRENT_BINARY_DIR}/include/simData/EnTTConfig.h"
+         DESTINATION include/simData
+     )
+ endif()
+diff --git a/SDK/simData/CategoryData/CategoryNameManager.h b/SDK/simData/CategoryData/CategoryNameManager.h
+index 2d50321..eefdfdc 100644
+--- a/SDK/simData/CategoryData/CategoryNameManager.h
++++ b/SDK/simData/CategoryData/CategoryNameManager.h
+@@ -27,6 +27,7 @@
+ #include <memory>
+ #include <vector>
+ 
++#include "simData/EnTTConfig.h"
+ #ifdef HAVE_ENTT
+ #include "entt/container/dense_map.hpp"
+ #endif
+diff --git a/SDK/simData/CategoryData/MemoryCategoryDataSlice.h b/SDK/simData/CategoryData/MemoryCategoryDataSlice.h
+index 57e96f6..8d2304d 100644
+--- a/SDK/simData/CategoryData/MemoryCategoryDataSlice.h
++++ b/SDK/simData/CategoryData/MemoryCategoryDataSlice.h
+@@ -28,6 +28,7 @@
+ #include <functional>
+ #include <map>
+ #include <optional>
++#include "simData/EnTTConfig.h"
+ #ifdef HAVE_ENTT
+ #include "entt/container/dense_map.hpp"
+ #endif
+diff --git a/SDK/simData/EnTTConfig.h.in b/SDK/simData/EnTTConfig.h.in
+new file mode 100644
+index 0000000..7d768b8
+--- /dev/null
++++ b/SDK/simData/EnTTConfig.h.in
+@@ -0,0 +1,9 @@
++#ifndef SIMDATA_ENTT_CONFIG_H
++#define SIMDATA_ENTT_CONFIG_H
++
++#cmakedefine01 SIMDATA_HAVE_ENTT
++#if SIMDATA_HAVE_ENTT && !defined(HAVE_ENTT)
++#define HAVE_ENTT 1
++#endif
++
++#endif

@@ -12,6 +12,7 @@ vcpkg_from_github(
     SHA512 af2e03572afcbcc219fc9e98ba0d6e1a1d4e75bb450423d37680f344eaf5cb8b297926c460f3dacd81c8f1d00e326887abfb03fa3894f4dd5a2dd7ccc7395118
     PATCHES
         osgearth-find-private-dependencies.patch
+        simdata-configure-entt-abi.patch
         "${SIMQT_OPENGL_PATCH}"
         wbp-link-opengl.patch
         windows-math-constants.patch # https://github.com/USNavalResearchLaboratory/simdissdk/pull/128
