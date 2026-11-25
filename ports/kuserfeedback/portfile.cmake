@@ -64,4 +64,8 @@ file(REMOVE_RECURSE
 )
 
 file(GLOB LICENSE_FILES "${SOURCE_PATH}/LICENSES/*")
+if("translations" IN_LIST FEATURES)
+    file(GLOB_RECURSE TRANSLATION_FILES "${SOURCE_PATH}/poqm/*.po")
+    list(APPEND LICENSE_FILES ${TRANSLATION_FILES})
+endif()
 vcpkg_install_copyright(FILE_LIST ${LICENSE_FILES})
